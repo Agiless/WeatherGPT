@@ -1,0 +1,25 @@
+# WeatherGPT Backend Dependencies
+# FastAPI + server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# Database — Supabase Postgres via asyncpg
+asyncpg>=0.30.0
+sqlalchemy[asyncio]>=2.0.30
+
+# HTTP client for weather APIs
+httpx>=0.27.0
+
+# Schemas + validation
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+
+# File uploads (voice)
+python-multipart>=0.0.9
+
+# Environment
+python-dotenv>=1.0.0
+
+# ERA5 (optional — fixture-first)
+# xarray>=2024.6.0
+# netcdf4>=1.7.0

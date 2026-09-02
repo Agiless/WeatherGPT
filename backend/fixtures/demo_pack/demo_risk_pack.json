@@ -1,0 +1,86 @@
+{
+  "pack_version": "1.0",
+  "generated_at": "2026-09-02T12:00:00Z",
+  "locations": [
+    {
+      "place_name": "Madurai",
+      "lat": 9.9252,
+      "lon": 78.1198,
+      "state": "Tamil Nadu",
+      "hazards": {
+        "rainfall": {
+          "owm_score": 62,
+          "imd_score": 68,
+          "era5_clim_score": 48,
+          "consensus_score": 89.2,
+          "final_risk_level": "high"
+        },
+        "wind": {
+          "owm_score": 24,
+          "imd_score": 20,
+          "consensus_score": 93.5,
+          "final_risk_level": "low"
+        }
+      },
+      "weather": {
+        "temp_c": 33.5,
+        "rain_24h_mm": 28.4,
+        "wind_kmh": 16.5,
+        "warning": "IMD Yellow Thunderstorm Warning"
+      }
+    },
+    {
+      "place_name": "Chennai",
+      "lat": 13.0827,
+      "lon": 80.2707,
+      "state": "Tamil Nadu",
+      "hazards": {
+        "rainfall": {
+          "owm_score": 52,
+          "imd_score": 56,
+          "era5_clim_score": 42,
+          "consensus_score": 91.0,
+          "final_risk_level": "moderate"
+        },
+        "wind": {
+          "owm_score": 28,
+          "imd_score": 25,
+          "consensus_score": 95.0,
+          "final_risk_level": "low"
+        }
+      },
+      "weather": {
+        "temp_c": 32.1,
+        "rain_24h_mm": 12.0,
+        "wind_kmh": 21.0,
+        "warning": "None"
+      }
+    },
+    {
+      "place_name": "Rameswaram",
+      "lat": 9.2876,
+      "lon": 79.3129,
+      "state": "Tamil Nadu",
+      "hazards": {
+        "rainfall": {
+          "owm_score": 40,
+          "imd_score": 45,
+          "consensus_score": 93.0,
+          "final_risk_level": "moderate"
+        },
+        "wind": {
+          "owm_score": 58,
+          "imd_score": 62,
+          "consensus_score": 92.5,
+          "final_risk_level": "high"
+        }
+      },
+      "weather": {
+        "temp_c": 31.0,
+        "rain_24h_mm": 6.5,
+        "wind_kmh": 44.0,
+        "warning": "Fisherman squall advisory - wave height 2.5m"
+      }
+    }
+  ]
+}
