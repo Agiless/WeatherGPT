@@ -2,6 +2,7 @@
  * Screen 6 — Response Screen (The Core Experience)
  * Persona-shaped weather intelligence output.
  * Renders low, medium, and high abstraction views according to persona configuration.
+ * Shows actual weather data (temperature, humidity, wind) from the pipeline.
  */
 
 import React, { useState } from "react";
@@ -27,6 +28,7 @@ type Props = {
         persona_type?: string;
         fields?: Record<string, any>;
         risk_object?: Record<string, any>;
+        weather_data?: Record<string, any>;
         source_attribution?: string;
         computed_at?: string;
       };
@@ -50,8 +52,14 @@ export default function ResponseScreen({ navigation, route }: Props) {
 
   const confidenceLabel = response.confidence_label || "Moderate confidence";
   const riskObject = response.risk_object;
+  const weatherData = response.weather_data;
   const rainHazard = riskObject?.hazards?.rainfall;
   const windHazard = riskObject?.hazards?.wind;
+
+  // Extract weather values for display
+  const currentWeather = weatherData?.current;
+  const forecast24h = weatherData?.forecast_24h;
+  const forecast48h = weatherData?.forecast_48h;
 
   const handleSpeak = () => {
     if (isPlayingVoice) {
@@ -72,6 +80,16 @@ export default function ResponseScreen({ navigation, route }: Props) {
         message: `WeatherGPT Advisory (${personaType.toUpperCase()}):\n${response.advisory_text}\n\nConfidence: ${confidenceLabel}`,
       });
     } catch {}
+  };
+
+  const getRiskColor = (level: string | undefined) => {
+    switch (level?.toLowerCase()) {
+      case "severe": return "#EF4444";
+      case "high": return "#F59E0B";
+      case "moderate": return "#FBBF24";
+      case "low": return "#34D399";
+      default: return "#94A3B8";
+    }
   };
 
   return (
@@ -189,6 +207,99 @@ export default function ResponseScreen({ navigation, route }: Props) {
           </View>
         )}
 
+        {/* ── Current Conditions Card ── */}
+        {currentWeather && (activeTab === "advisory" || !isHighAbstraction) && (
+          <View style={styles.weatherCard}>
+            <Text style={styles.weatherCardTitle}>Current Conditions</Text>
+            <View style={styles.weatherGrid}>
+              {currentWeather.temperature_c != null && (
+                <View style={styles.weatherItem}>
+                  <Ionicons name="thermometer-outline" size={20} color="#F59E0B" />
+                  <Text style={styles.weatherValue}>{currentWeather.temperature_c}°C</Text>
+                  <Text style={styles.weatherLabel}>Temperature</Text>
+                </View>
+              )}
+              {currentWeather.humidity_pct != null && (
+                <View style={styles.weatherItem}>
+                  <Ionicons name="water-outline" size={20} color="#60A5FA" />
+                  <Text style={styles.weatherValue}>{currentWeather.humidity_pct}%</Text>
+                  <Text style={styles.weatherLabel}>Humidity</Text>
+                </View>
+              )}
+              {currentWeather.wind_speed_kmh != null && (
+                <View style={styles.weatherItem}>
+                  <Ionicons name="flag-outline" size={20} color="#34D399" />
+                  <Text style={styles.weatherValue}>{currentWeather.wind_speed_kmh}</Text>
+                  <Text style={styles.weatherLabel}>Wind km/h</Text>
+                </View>
+              )}
+              {currentWeather.pressure_hpa != null && (
+                <View style={styles.weatherItem}>
+                  <Ionicons name="speedometer-outline" size={20} color="#A78BFA" />
+                  <Text style={styles.weatherValue}>{currentWeather.pressure_hpa}</Text>
+                  <Text style={styles.weatherLabel}>Pressure hPa</Text>
+                </View>
+              )}
+            </View>
+            {currentWeather.weather_description ? (
+              <Text style={styles.weatherDescription}>
+                {currentWeather.weather_description}
+                {currentWeather.wind_direction ? ` · Wind from ${currentWeather.wind_direction}` : ""}
+              </Text>
+            ) : null}
+          </View>
+        )}
+
+        {/* ── Forecast Cards (medium / high abstraction) ── */}
+        {!isLowAbstraction && forecast24h && (activeTab === "advisory" || !isHighAbstraction) && (
+          <View style={styles.forecastRow}>
+            <View style={styles.forecastCard}>
+              <Text style={styles.forecastTitle}>Next 24h</Text>
+              {forecast24h.max_temp_c != null && (
+                <Text style={styles.forecastValue}>
+                  {forecast24h.min_temp_c ?? "—"}° — {forecast24h.max_temp_c}°C
+                </Text>
+              )}
+              {forecast24h.total_rain_mm != null && (
+                <View style={styles.forecastMetric}>
+                  <Ionicons name="rainy" size={14} color="#60A5FA" />
+                  <Text style={styles.forecastMetricText}>{forecast24h.total_rain_mm} mm</Text>
+                </View>
+              )}
+              {forecast24h.precip_probability != null && (
+                <Text style={styles.forecastProb}>
+                  {forecast24h.precip_probability <= 1
+                    ? Math.round(forecast24h.precip_probability * 100)
+                    : forecast24h.precip_probability}% chance
+                </Text>
+              )}
+            </View>
+            {forecast48h && (
+              <View style={styles.forecastCard}>
+                <Text style={styles.forecastTitle}>24—48h</Text>
+                {forecast48h.max_temp_c != null && (
+                  <Text style={styles.forecastValue}>
+                    {forecast48h.min_temp_c ?? "—"}° — {forecast48h.max_temp_c}°C
+                  </Text>
+                )}
+                {forecast48h.total_rain_mm != null && (
+                  <View style={styles.forecastMetric}>
+                    <Ionicons name="rainy" size={14} color="#60A5FA" />
+                    <Text style={styles.forecastMetricText}>{forecast48h.total_rain_mm} mm</Text>
+                  </View>
+                )}
+                {forecast48h.precip_probability != null && (
+                  <Text style={styles.forecastProb}>
+                    {forecast48h.precip_probability <= 1
+                      ? Math.round(forecast48h.precip_probability * 100)
+                      : forecast48h.precip_probability}% chance
+                  </Text>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* ── Tab 2: Model Deltas & Consensus (High Abstraction) ── */}
         {isHighAbstraction && activeTab === "models" && (
           <View style={styles.techSection}>
@@ -221,39 +332,51 @@ export default function ResponseScreen({ navigation, route }: Props) {
             <Text style={styles.sectionHeading}>Quantitative Hazard Matrix</Text>
             <View style={styles.matrixRow}>
               <Text style={styles.matrixHazard}>Rainfall Risk</Text>
-              <Text style={styles.matrixLevel}>
+              <Text style={[styles.matrixLevel, { color: getRiskColor(rainHazard?.final_risk_level) }]}>
                 {rainHazard?.final_risk_level?.toUpperCase() || "MODERATE"}
               </Text>
             </View>
             <View style={styles.matrixRow}>
               <Text style={styles.matrixHazard}>Wind Risk</Text>
-              <Text style={styles.matrixLevel}>
+              <Text style={[styles.matrixLevel, { color: getRiskColor(windHazard?.final_risk_level) }]}>
                 {windHazard?.final_risk_level?.toUpperCase() || "LOW"}
               </Text>
             </View>
             <View style={styles.matrixRow}>
               <Text style={styles.matrixHazard}>Authoritative Override</Text>
-              <Text style={styles.matrixLevel}>IMD Priority Active</Text>
+              <Text style={styles.matrixLevel}>
+                {riskObject?.imd_official_upgrade ? "IMD OVERRIDE ACTIVE" : "None"}
+              </Text>
             </View>
           </View>
         )}
 
-        {/* ── Medium Abstraction: Fast Metric Chips ── */}
+        {/* ── Risk Level Chips (medium abstraction) ── */}
         {!isLowAbstraction && !isHighAbstraction && (
           <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
+            <View style={[styles.metricCard, { borderLeftColor: getRiskColor(rainHazard?.final_risk_level), borderLeftWidth: 3 }]}>
               <Ionicons name="rainy" size={20} color="#60A5FA" />
               <Text style={styles.metricTitle}>Rain Risk</Text>
-              <Text style={styles.metricValue}>
+              <Text style={[styles.metricValue, { color: getRiskColor(rainHazard?.final_risk_level) }]}>
                 {rainHazard?.final_risk_level?.toUpperCase() || "MODERATE"}
               </Text>
+              {rainHazard?.consensus_score != null && (
+                <Text style={styles.metricConsensus}>
+                  Consensus: {rainHazard.consensus_score}%
+                </Text>
+              )}
             </View>
-            <View style={styles.metricCard}>
+            <View style={[styles.metricCard, { borderLeftColor: getRiskColor(windHazard?.final_risk_level), borderLeftWidth: 3 }]}>
               <Ionicons name="flag" size={20} color="#34D399" />
               <Text style={styles.metricTitle}>Wind Risk</Text>
-              <Text style={styles.metricValue}>
+              <Text style={[styles.metricValue, { color: getRiskColor(windHazard?.final_risk_level) }]}>
                 {windHazard?.final_risk_level?.toUpperCase() || "LOW"}
               </Text>
+              {windHazard?.consensus_score != null && (
+                <Text style={styles.metricConsensus}>
+                  Consensus: {windHazard.consensus_score}%
+                </Text>
+              )}
             </View>
           </View>
         )}
@@ -444,6 +567,100 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 24,
   },
+  // Weather data card
+  weatherCard: {
+    backgroundColor: "#1E293B",
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#334155",
+    marginBottom: 16,
+  },
+  weatherCardTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#94A3B8",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 14,
+  },
+  weatherGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  weatherItem: {
+    width: "46%",
+    backgroundColor: "rgba(96, 165, 250, 0.06)",
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(96, 165, 250, 0.1)",
+  },
+  weatherValue: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#F1F5F9",
+    marginTop: 6,
+  },
+  weatherLabel: {
+    fontSize: 11,
+    color: "#94A3B8",
+    marginTop: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  weatherDescription: {
+    color: "#CBD5E1",
+    fontSize: 13,
+    marginTop: 14,
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+  // Forecast cards
+  forecastRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+  forecastCard: {
+    flex: 1,
+    backgroundColor: "#1E293B",
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  forecastTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#94A3B8",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  forecastValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#F1F5F9",
+    marginBottom: 6,
+  },
+  forecastMetric: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 4,
+  },
+  forecastMetricText: {
+    fontSize: 13,
+    color: "#CBD5E1",
+  },
+  forecastProb: {
+    fontSize: 12,
+    color: "#94A3B8",
+  },
+  // Technical sections
   techSection: {
     backgroundColor: "#1E293B",
     borderRadius: 18,
@@ -528,10 +745,14 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   metricValue: {
-    color: "#F1F5F9",
     fontSize: 16,
     fontWeight: "700",
     marginTop: 2,
+  },
+  metricConsensus: {
+    color: "#64748B",
+    fontSize: 11,
+    marginTop: 4,
   },
   footer: {
     alignItems: "center",

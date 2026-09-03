@@ -20,6 +20,10 @@ DEMO_USER_ID = "00000000-0000-0000-0000-000000000002"
 @router.get("/v1/profile", response_model=UserProfileOut)
 async def get_profile(db: AsyncSession = Depends(get_db)):
     """Return the single demo user profile."""
+    print("\n" + "-" * 50)
+    print("[DEBUG] GET /v1/profile")
+    print(f"[DEBUG] Input: user_id={DEMO_USER_ID}")
+
     result = await db.execute(
         text(
             "SELECT up.user_id, p.persona_type, up.preferred_language, "
@@ -32,8 +36,16 @@ async def get_profile(db: AsyncSession = Depends(get_db)):
     )
     row = result.mappings().first()
     if not row:
-        return UserProfileOut(user_id=DEMO_USER_ID)
-    return UserProfileOut(**dict(row))
+        response = UserProfileOut(user_id=DEMO_USER_ID)
+        print(f"[DEBUG] Output: default profile (no row found)")
+        print(f"  {response.model_dump()}")
+        print("-" * 50 + "\n")
+        return response
+
+    response = UserProfileOut(**dict(row))
+    print(f"[DEBUG] Output: {response.model_dump()}")
+    print("-" * 50 + "\n")
+    return response
 
 
 @router.put("/v1/profile", response_model=UserProfileOut)
@@ -42,6 +54,10 @@ async def update_profile(
     db: AsyncSession = Depends(get_db),
 ):
     """Update the demo user profile (partial update)."""
+    print("\n" + "-" * 50)
+    print("[DEBUG] PUT /v1/profile")
+    print(f"[DEBUG] Input: {update.model_dump(exclude_none=True)}")
+
     sets = []
     params: dict = {"uid": DEMO_USER_ID}
 
@@ -72,8 +88,14 @@ async def update_profile(
 
     if sets:
         query = f"UPDATE user_profiles SET {', '.join(sets)} WHERE user_id = :uid"
+        print(f"[DEBUG] SQL: {query}")
+        print(f"[DEBUG] Params: {params}")
         await db.execute(text(query), params)
         await db.commit()
+    else:
+        print("[DEBUG] No fields to update")
 
     # Return the updated profile
-    return await get_profile(db)
+    result = await get_profile(db)
+    print("-" * 50 + "\n")
+    return result

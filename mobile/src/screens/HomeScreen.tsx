@@ -55,13 +55,17 @@ export default function HomeScreen({ navigation }: Props) {
   const isVoiceFirst = persona === "farmer" || persona === "fisherman";
 
   const handleChipPress = (chip: (typeof QUICK_CHIPS)[number]) => {
-    setQueryText(
+    const chipQuery =
       chip.label === "Today"
         ? "What's the weather today?"
         : chip.label === "Next 48h"
         ? "Weather forecast for the next 48 hours"
-        : `${chip.label} forecast for my area`
-    );
+        : `${chip.label} forecast for my area`;
+    // Auto-submit the chip query
+    navigation.navigate("Loading", {
+      queryText: chipQuery,
+      personaType: persona,
+    });
   };
 
   const handleSendQuery = () => {
@@ -95,6 +99,9 @@ export default function HomeScreen({ navigation }: Props) {
               { backgroundColor: isOnline ? "#34D399" : "#F59E0B" },
             ]}
           />
+          <TouchableOpacity onPress={() => navigation.navigate("History")}>
+            <Ionicons name="time-outline" size={22} color="#94A3B8" />
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate("Map", { initialMode: "radar" })}>
             <Ionicons name="map-outline" size={22} color="#60A5FA" />
           </TouchableOpacity>

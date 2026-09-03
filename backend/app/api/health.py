@@ -12,8 +12,16 @@ router = APIRouter(tags=["health"])
 @router.get("/v1/health")
 async def health_check():
     """Simple health check. Returns 200 if the API is running."""
-    return {
+    print("\n" + "-" * 50)
+    print("[DEBUG] GET /v1/health")
+    print("[DEBUG] Input: (none)")
+
+    response = {
         "status": "ok",
         "service": "weathergpt",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+    print(f"[DEBUG] Output: {response}")
+    print("-" * 50 + "\n")
+    return response

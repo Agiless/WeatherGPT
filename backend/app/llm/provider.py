@@ -36,13 +36,16 @@ async def _call_gemini(
     json_mode: bool = False,
     max_tokens: int = 1024,
     temperature: float = 0.3,
+    preferred_model: str = "gemini-2.5-flash",
 ) -> str:
     """
     Call Google Gemini REST API using generateContent.
-    Tries gemini-2.5-flash first, falling back to gemini-2.0-flash or gemini-1.5-flash.
+    Uses preferred_model first, falling back to other Gemini Flash variants.
     Logs request and response in terminal.
     """
-    models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    # Build model list: preferred model first, then fallbacks
+    all_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    models = [preferred_model] + [m for m in all_models if m != preferred_model]
     last_err = None
 
     payload: dict = {
@@ -59,7 +62,7 @@ async def _call_gemini(
     if json_mode:
         payload["generationConfig"]["response_mime_type"] = "application/json"
 
-    async with httpx.AsyncClient(timeout=35.0) as client:
+    async with httpx.AsyncClient(timeout=45.0) as client:
         for model in models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             print(f"\n[GEMINI REQUEST] Model: {model} | JSON Mode: {json_mode}")
@@ -158,14 +161,33 @@ async def llm_call(
     if not settings.llm_api_key:
         print("[LLM WARN] No LLM_API_KEY configured — using fallback mock response")
         if json_mode:
-            return json.dumps({
-                "persona_type": "generic",
-                "location": {"lat": 13.0827, "lon": 80.2707, "place_name": "Chennai"},
-                "time_window": {"start": None, "end": None},
-                "hazard_type": "general",
-                "query_intent": "forecast",
-                "language": "en",
-            })
+            # Detect Layer 1 (extraction) vs Layer 2 (advisory) based on prompt content
+            is_layer2 = "ANTI-HALLUCINATION" in system_prompt or "advisory" in system_prompt.lower()
+            if is_layer2:
+                return json.dumps({
+                    "advisory_text": (
+                        "Weather conditions are generally fair. "
+                        "Temperature around 31-32°C with partly cloudy skies. "
+                        "Light to moderate rainfall possible in the next 24 hours. "
+                        "Wind speeds are gentle at 12-15 km/h. "
+                        "No significant weather warnings at this time. "
+                        "Stay hydrated and check back for updates."
+                    ),
+                    "confidence_label": "Moderate confidence",
+                    "fields": {
+                        "next_48h_summary": "Partly cloudy with scattered showers expected"
+                    },
+                    "source_attribution": "WeatherGPT Risk Engine (Mock — set LLM_API_KEY for live responses)",
+                })
+            else:
+                return json.dumps({
+                    "persona_type": "generic",
+                    "location": {"lat": 13.0827, "lon": 80.2707, "place_name": "Chennai"},
+                    "time_window": {"start": None, "end": None},
+                    "hazard_type": "general",
+                    "query_intent": "forecast",
+                    "language": "en",
+                })
         return (
             "Weather advisory: Conditions are generally fair. "
             "Temperature around 32 degrees C with partly cloudy skies. "
@@ -192,4 +214,5 @@ async def llm_call(
             json_mode=json_mode,
             max_tokens=max_tokens,
             temperature=temperature,
+            preferred_model=settings.gemini_model,
         )

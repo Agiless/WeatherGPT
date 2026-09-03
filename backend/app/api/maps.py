@@ -75,8 +75,10 @@ DEMO_POLYGONS = {
 @router.get("/config")
 async def get_map_config():
     """Returns Mapbox styling configs, legends, and tokens."""
+    print("\n" + "-" * 50)
+    print("[DEBUG] GET /v1/maps/config")
     settings = get_settings()
-    return {
+    config = {
         "styles": {
             "temperature": "mapbox://styles/mapbox/outdoors-v12",
             "radar": "mapbox://styles/mapbox/dark-v11"
@@ -85,11 +87,16 @@ async def get_map_config():
         "default_zoom": 4.5,
         "mapbox_token": settings.mapbox_access_token
     }
+    print(f"[DEBUG] Output: Map config returned (token={'configured' if settings.mapbox_access_token else 'empty'})")
+    print("-" * 50 + "\n")
+    return config
 
 
 @router.get("/temperature-heatmap")
 async def get_temperature_heatmap():
     """Returns GeoJSON FeatureCollection of station observations and anomalies."""
+    print("\n" + "-" * 50)
+    print("[DEBUG] GET /v1/maps/temperature-heatmap")
     features = []
     now_str = datetime.now(timezone.utc).isoformat()
     for pt in DEMO_HEATMAP_POINTS:
@@ -106,15 +113,20 @@ async def get_temperature_heatmap():
                 "valid_time": now_str
             }
         })
-    return {
+    result = {
         "type": "FeatureCollection",
         "features": features
     }
+    print(f"[DEBUG] Output: {len(features)} station points returned")
+    print("-" * 50 + "\n")
+    return result
 
 
 @router.get("/rain-radar")
 async def get_rain_radar():
     """Returns animated or latest frame templates for rain radar overlay."""
+    print("\n" + "-" * 50)
+    print("[DEBUG] GET /v1/maps/rain-radar")
     settings = get_settings()
     owm_key = settings.openweather_api_key
 
@@ -125,7 +137,7 @@ async def get_rain_radar():
         # High quality RainViewer public open radar tile cache
         tile_template = "https://tilecache.rainviewer.com/v2/radar/nowcast_latest/256/{z}/{x}/{y}/2/1_1.png"
 
-    return {
+    result = {
         "mode": "radar",
         "frames": [
             {
@@ -140,19 +152,32 @@ async def get_rain_radar():
             "stops": [0, 1, 4, 8, 16, 32]
         }
     }
+    print(f"[DEBUG] Output: Rain radar frames returned (source={result['frames'][0]['source']})")
+    print("-" * 50 + "\n")
+    return result
 
 
 @router.get("/imd-polygons")
 async def get_imd_polygons():
     """Returns official IMD warning and nowcast polygon geometries."""
+    print("\n" + "-" * 50)
+    print("[DEBUG] GET /v1/maps/imd-polygons")
+    print(f"[DEBUG] Output: {len(DEMO_POLYGONS['features'])} IMD polygons returned")
+    print("-" * 50 + "\n")
     return DEMO_POLYGONS
 
 
 @router.get("/map.html", response_class=HTMLResponse)
 async def serve_map_html():
     """Serves the Mapbox GL JS map application inside WebView."""
+    print("\n" + "-" * 50)
+    print("[DEBUG] GET /v1/maps/map.html")
     if MAP_HTML_PATH.exists():
         with open(MAP_HTML_PATH, "r", encoding="utf-8") as f:
             content = f.read()
+        print(f"[DEBUG] Output: map.html served ({len(content)} bytes)")
+        print("-" * 50 + "\n")
         return HTMLResponse(content=content)
+    print("[DEBUG] Output: map.html template loading placeholder")
+    print("-" * 50 + "\n")
     return HTMLResponse(content="<h3>Map template loading...</h3>")

@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     # ── LLM ───────────────────────────────────────────────────
     llm_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"  # Configurable: gemini-2.5-flash, gemini-2.0-flash
 
     # ── Server ────────────────────────────────────────────────
     host: str = "0.0.0.0"

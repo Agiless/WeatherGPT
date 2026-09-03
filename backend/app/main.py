@@ -60,6 +60,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from pathlib import Path
+from fastapi.responses import HTMLResponse
+
+WEB_HTML_PATH = Path(__file__).parent / "web" / "index.html"
+
+
+@app.get("/", response_class=HTMLResponse)
+@app.get("/web", response_class=HTMLResponse)
+async def serve_web_ui():
+    """Serves the interactive WeatherGPT web application."""
+    if WEB_HTML_PATH.exists():
+        with open(WEB_HTML_PATH, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>WeatherGPT Web UI loading...</h1>")
+
+
 # ── Register routers ─────────────────────────────────────
 app.include_router(health.router)
 app.include_router(personas.router)
@@ -68,3 +84,4 @@ app.include_router(query.router)
 app.include_router(maps.router)
 app.include_router(warnings.router)
 app.include_router(risk_snapshot.router)
+

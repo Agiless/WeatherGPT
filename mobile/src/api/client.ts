@@ -7,7 +7,7 @@
 import Constants from "expo-constants";
 
 const API_BASE =
-  Constants.expoConfig?.extra?.apiBaseUrl || "http://192.168.1.42:8000";
+  Constants.expoConfig?.extra?.apiBaseUrl || "http://10.184.48.67:8000";
 
 interface RequestOptions {
   method?: string;

@@ -55,5 +55,6 @@ class QueryResponse(BaseModel):
     fields: dict = Field(default_factory=dict)  # persona-specific structured fields
     audio_url: Optional[str] = None
     risk_object: Optional[dict] = None  # included for high-abstraction personas only
+    weather_data: Optional[dict] = None  # current conditions + forecast for display
     source_attribution: str = ""
     computed_at: Optional[datetime] = None

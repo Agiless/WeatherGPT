@@ -14,6 +14,10 @@ router = APIRouter(tags=["personas"])
 @router.get("/v1/personas")
 async def list_personas(db: AsyncSession | None = Depends(get_db)):
     """Return all personas with their response_format config."""
+    print("\n" + "-" * 50)
+    print("[DEBUG] GET /v1/personas")
+    print(f"[DEBUG] Input: db_available={db is not None}")
+
     if db is not None:
         try:
             result = await db.execute(
@@ -25,7 +29,7 @@ async def list_personas(db: AsyncSession | None = Depends(get_db)):
             )
             rows = result.mappings().all()
             if rows:
-                return {
+                response = {
                     "personas": [
                         {
                             "persona_id": str(row["persona_id"]),
@@ -38,8 +42,13 @@ async def list_personas(db: AsyncSession | None = Depends(get_db)):
                         for row in rows
                     ]
                 }
-        except Exception:
-            pass
+                print(f"[DEBUG] Output: {len(response['personas'])} personas from DB")
+                for p in response["personas"]:
+                    print(f"  - {p['persona_type']} (level={p['abstraction_level']})")
+                print("-" * 50 + "\n")
+                return response
+        except Exception as e:
+            print(f"[DEBUG] DB query failed: {e}")
 
     # Built-in fallback personas
     from app.llm.layer2 import PERSONA_CONFIGS
@@ -48,7 +57,7 @@ async def list_personas(db: AsyncSession | None = Depends(get_db)):
         "traveller": "medium", "generic": "medium", "researcher_scientist": "high",
         "disaster_manager_govt": "high", "aviation": "high",
     }
-    return {
+    response = {
         "personas": [
             {
                 "persona_id": f"00000000-0000-0000-0000-0000000000{i+1:02d}",
@@ -61,3 +70,8 @@ async def list_personas(db: AsyncSession | None = Depends(get_db)):
             for i, (p_type, conf) in enumerate(PERSONA_CONFIGS.items())
         ]
     }
+    print(f"[DEBUG] Output: {len(response['personas'])} personas from FALLBACK")
+    for p in response["personas"]:
+        print(f"  - {p['persona_type']} (level={p['abstraction_level']})")
+    print("-" * 50 + "\n")
+    return response

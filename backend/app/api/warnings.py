@@ -12,7 +12,11 @@ router = APIRouter(prefix="/v1/warnings", tags=["warnings"])
 @router.get("/active")
 async def get_active_warnings(bbox: str | None = None):
     """Retrieve active meteorological warnings."""
-    return {
+    print("\n" + "-" * 50)
+    print("[DEBUG] GET /v1/warnings/active")
+    print(f"[DEBUG] Input: bbox={bbox}")
+
+    response = {
         "status": "active",
         "count": len(DEMO_POLYGONS["features"]),
         "warnings": [
@@ -37,3 +41,9 @@ async def get_active_warnings(bbox: str | None = None):
         ],
         "polygons": DEMO_POLYGONS
     }
+
+    print(f"[DEBUG] Output: {response['count']} warnings, {len(response['warnings'])} items")
+    for w in response["warnings"]:
+        print(f"  - [{w['severity']}] {w['title']}")
+    print("-" * 50 + "\n")
+    return response
