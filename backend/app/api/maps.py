@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Response
 from fastapi.responses import HTMLResponse
 from app.core.config import get_settings
+from dotenv import load_dotenv
+load_dotenv()
 
 router = APIRouter(prefix="/v1/maps", tags=["maps"])
 
@@ -81,7 +83,7 @@ async def get_map_config():
         },
         "default_center": [78.9629, 20.5937],
         "default_zoom": 4.5,
-        "mapbox_token": settings.mapbox_access_token or "pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw"
+        "mapbox_token": settings.mapbox_access_token
     }
 
 
