@@ -23,7 +23,7 @@
     },
     "extra": {
       "apiBaseUrl": "http://192.168.137.168:8000",
-      "mapboxToken": ""
+      "mapboxToken": "pk.eyJ1IjoiYWdpbGVzcyIsImEiOiJjbWZzZTV3MjAwNTc5MmlxdmJ2bXc4eWNhIn0.Bl8NirUpFwrh-uGJdSn6Qw"
     },
     "plugins": [
       "expo-audio"

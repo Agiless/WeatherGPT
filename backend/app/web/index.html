@@ -559,12 +559,73 @@
     </a>
 
     <div class="header-controls">
+      <button class="btn-report" onclick="openReportModal()" style="background: linear-gradient(135deg, #F59E0B, #EF4444); color: #FFF; border: none; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35); transition: transform 0.2s;">
+        <i class="fa-solid fa-bullhorn"></i> Report Ground Hazard
+      </button>
+
       <div class="status-pill" id="healthPill">
         <div class="status-dot"></div>
         <span id="healthText">Backend Online</span>
       </div>
     </div>
   </header>
+
+  <!-- ── Ground Hazard Reporting Modal ── -->
+  <div id="reportModal" style="display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
+    <div style="background: #0F172A; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; width: 100%; max-width: 460px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); color: #F8FAFC;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700;">
+          <span style="background: #EF4444; color: #FFF; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;"><i class="fa-solid fa-bullhorn"></i></span>
+          Report Ground Weather Hazard
+        </div>
+        <button onclick="closeReportModal()" style="background: none; border: none; color: #94A3B8; font-size: 18px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p style="font-size: 12px; color: #94A3B8; margin-bottom: 16px;">Help your local community and corroborate satellite radar with verified ground observations.</p>
+
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 11px; font-weight: 700; color: #CBD5E1; text-transform: uppercase; margin-bottom: 6px;">Hazard Type</label>
+        <select id="modalHazardType" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.1); color: #F8FAFC; padding: 10px; border-radius: 10px; font-size: 13px;">
+          <option value="waterlogging">🌊 Waterlogging / Flash Flood</option>
+          <option value="heavy_rain">🌧️ Severe Thunderstorm Rain</option>
+          <option value="hailstorm">🧊 Hailstorm Damage</option>
+          <option value="tree_fall">🌳 Fallen Tree / Blocked Road</option>
+          <option value="extreme_wind">💨 Extreme Gale / Squall Wind</option>
+          <option value="dense_fog">🌫️ Zero-Visibility Fog</option>
+        </select>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: #CBD5E1; text-transform: uppercase; margin-bottom: 6px;">Severity</label>
+          <select id="modalSeverity" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.1); color: #F8FAFC; padding: 10px; border-radius: 10px; font-size: 13px;">
+            <option value="low">Low (Minor Impact)</option>
+            <option value="medium" selected>Medium (Moderate Impact)</option>
+            <option value="high">High (Severe Disruption)</option>
+            <option value="severe">Critical (Life/Property Threat)</option>
+          </select>
+        </div>
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: #CBD5E1; text-transform: uppercase; margin-bottom: 6px;">Your Name/Alias</label>
+          <input type="text" id="modalAlias" value="Citizen Observer" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.1); color: #F8FAFC; padding: 10px; border-radius: 10px; font-size: 13px;" />
+        </div>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 11px; font-weight: 700; color: #CBD5E1; text-transform: uppercase; margin-bottom: 6px;">Location / Landmark</label>
+        <input type="text" id="modalLocation" placeholder="e.g. Near Collectorate, Madurai" value="Chennai Urban Area" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.1); color: #F8FAFC; padding: 10px; border-radius: 10px; font-size: 13px;" />
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 11px; font-weight: 700; color: #CBD5E1; text-transform: uppercase; margin-bottom: 6px;">Brief Description</label>
+        <textarea id="modalDescription" rows="2" placeholder="e.g. Water knee-deep, road diversion in place..." style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.1); color: #F8FAFC; padding: 10px; border-radius: 10px; font-size: 13px; resize: none;">Waterlogging observed near main junction.</textarea>
+      </div>
+
+      <button id="modalSubmitBtn" onclick="submitHazardReport()" style="width: 100%; background: linear-gradient(135deg, #EF4444, #F59E0B); color: #FFF; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="fa-solid fa-paper-plane"></i> Broadcast Hazard Pin to Map
+      </button>
+    </div>
+  </div>
 
   <!-- ── Main Dashboard Layout ── -->
   <main class="app-container">
@@ -604,6 +665,27 @@
         </div>
       </div>
 
+      <!-- Language & Voice Controls -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary);">
+          <i class="fa-solid fa-language" style="color: var(--accent-blue);"></i> Language:
+          <select id="langSelect" style="background: rgba(15, 23, 42, 0.9); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; font-size: 13px; outline: none; cursor: pointer;">
+            <option value="en">English (EN)</option>
+            <option value="ta">Tamil (தமிழ்)</option>
+            <option value="hi">Hindi (हिन्दी)</option>
+            <option value="te">Telugu (తెలుగు)</option>
+            <option value="kn">Kannada (ಕನ್ನಡ)</option>
+            <option value="ml">Malayalam (മലയാളം)</option>
+            <option value="mr">Marathi (मराठी)</option>
+            <option value="bn">Bengali (বাংলা)</option>
+            <option value="gu">Gujarati (ગુજરાતી)</option>
+          </select>
+        </div>
+        <div id="voiceStatus" style="font-size: 12px; color: var(--accent-rose); display: none; align-items: center; gap: 6px; font-weight: 600;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #EF4444; display: inline-block; animation: pulse 1s infinite;"></span> Listening to speech...
+        </div>
+      </div>
+
       <!-- Input Area -->
       <div class="input-wrapper">
         <input 
@@ -613,7 +695,10 @@
           placeholder="Ask a question (e.g., Rain forecast for my crops tomorrow?)"
           value="Will it rain tomorrow in Madurai? Need agricultural harvest advice."
         />
-        <button class="mic-btn" id="micBtn" title="Voice Simulation">
+        <button class="mic-btn" id="gpsBtn" title="Auto-Detect My GPS Location" onclick="useCurrentLocation()" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); color: #34D399;">
+          <i class="fa-solid fa-location-crosshairs"></i>
+        </button>
+        <button class="mic-btn" id="micBtn" title="Speak Query (Bhashini ASR)">
           <i class="fa-solid fa-microphone"></i>
         </button>
       </div>
@@ -635,9 +720,22 @@
 
       <!-- Advisory Output Box -->
       <div class="advisory-box" id="advisoryBox">
-        <div class="confidence-badge" id="confidenceBadge">
-          <i class="fa-solid fa-circle-check"></i>
-          <span id="confidenceText">High Confidence · Consensus 91.5%</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div class="confidence-badge" id="confidenceBadge">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="confidenceText">High Confidence · Consensus 91.5%</span>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button id="copyBtn" onclick="copyAdvisory()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #CBD5E1; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+              <i class="fa-regular fa-copy" id="copyIcon"></i> <span id="copyText">Copy</span>
+            </button>
+            <button id="shareBtn" onclick="shareWhatsApp()" style="background: rgba(37, 211, 102, 0.15); border: 1px solid rgba(37, 211, 102, 0.4); color: #25D366; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+              <i class="fa-brands fa-whatsapp"></i> <span>Share</span>
+            </button>
+            <button id="ttsBtn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: var(--accent-blue); padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+              <i class="fa-solid fa-volume-high"></i> <span id="ttsBtnText">Listen</span>
+            </button>
+          </div>
         </div>
 
         <div class="advisory-text" id="advisoryText">
@@ -769,10 +867,150 @@
       });
     });
 
-    // Mic button simulation
+    let lastResponseData = null;
+    let audioPlayer = new Audio();
+    let isPlayingAudio = false;
+
+    // Mic button: Live Web Speech Recognition or Media Recording
+    let recognition = null;
+    let isRecording = false;
+
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRec();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        isRecording = true;
+        document.getElementById('micBtn').classList.add('recording');
+        document.getElementById('voiceStatus').style.display = 'flex';
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('queryInput').value = transcript;
+        runQuery();
+      };
+
+      recognition.onerror = (e) => {
+        console.warn("Speech recognition error:", e);
+        stopMic();
+      };
+
+      recognition.onend = () => {
+        stopMic();
+      };
+    }
+
+    function stopMic() {
+      isRecording = false;
+      document.getElementById('micBtn').classList.remove('recording');
+      document.getElementById('voiceStatus').style.display = 'none';
+    }
+
     document.getElementById('micBtn').addEventListener('click', () => {
-      document.getElementById('queryInput').value = "Will it rain tomorrow in my village? Need agricultural harvest advice.";
-      runQuery();
+      const lang = document.getElementById('langSelect').value;
+      if (recognition) {
+        if (isRecording) {
+          recognition.stop();
+          stopMic();
+        } else {
+          recognition.lang = lang === 'en' ? 'en-IN' : (lang === 'ta' ? 'ta-IN' : (lang === 'hi' ? 'hi-IN' : 'en-IN'));
+          try {
+            recognition.start();
+          } catch (e) {
+            console.warn(e);
+          }
+        }
+      } else {
+        // Fallback simulation for unsupported browsers
+        const langPhrases = {
+          ta: "நாளைக்கு மதுரையில் மழை பெய்யுமா? அறுவடை செய்யலாமா?",
+          hi: "क्या कल मेरे खेत में भारी बारिश होगी?",
+          te: "రేపు వర్షం పడుతుందా? పంటలకు ఏమైనా ప్రమాదమా?",
+          en: "Will it rain tomorrow in Madurai? Need agricultural harvest advice."
+        };
+        document.getElementById('queryInput').value = langPhrases[lang] || langPhrases.en;
+        runQuery();
+      }
+    });
+
+    // TTS Voice Playback Button
+    document.getElementById('ttsBtn').addEventListener('click', async () => {
+      const ttsBtnText = document.getElementById('ttsBtnText');
+      if (isPlayingAudio) {
+        audioPlayer.pause();
+        window.speechSynthesis?.cancel();
+        isPlayingAudio = false;
+        ttsBtnText.textContent = 'Listen Voice';
+        return;
+      }
+
+      if (lastResponseData && lastResponseData.audio_base64) {
+        audioPlayer.src = `data:audio/wav;base64,${lastResponseData.audio_base64}`;
+        audioPlayer.play();
+        isPlayingAudio = true;
+        ttsBtnText.textContent = 'Stop Playing';
+        audioPlayer.onended = () => {
+          isPlayingAudio = false;
+          ttsBtnText.textContent = 'Listen Voice';
+        };
+        return;
+      }
+
+      // If no pre-synthesized audio, call /v1/tts or Web Speech API
+      const textToSpeak = document.getElementById('advisoryText').textContent;
+      const lang = document.getElementById('langSelect').value;
+
+      ttsBtnText.textContent = 'Synthesizing...';
+      try {
+        const res = await fetch('/v1/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: textToSpeak,
+            language: lang,
+            gender: 'female'
+          })
+        });
+        const data = await res.json();
+        if (data.audio_base64) {
+          audioPlayer.src = `data:audio/wav;base64,${data.audio_base64}`;
+          audioPlayer.play();
+          isPlayingAudio = true;
+          ttsBtnText.textContent = 'Stop Playing';
+          audioPlayer.onended = () => {
+            isPlayingAudio = false;
+            ttsBtnText.textContent = 'Listen Voice';
+          };
+          return;
+        }
+      } catch (err) {
+        console.debug("Backend TTS fallback:", err);
+      }
+
+      // Browser native Web Speech synthesis fallback
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(textToSpeak);
+        utter.lang = lang === 'ta' ? 'ta-IN' : (lang === 'hi' ? 'hi-IN' : 'en-IN');
+        utter.onstart = () => {
+          isPlayingAudio = true;
+          ttsBtnText.textContent = 'Stop Playing';
+        };
+        utter.onend = () => {
+          isPlayingAudio = false;
+          ttsBtnText.textContent = 'Listen Voice';
+        };
+        utter.onerror = () => {
+          isPlayingAudio = false;
+          ttsBtnText.textContent = 'Listen Voice';
+        };
+        window.speechSynthesis.speak(utter);
+      } else {
+        ttsBtnText.textContent = 'Listen Voice';
+      }
     });
 
     // Submit button click
@@ -811,6 +1049,7 @@
       const text = document.getElementById('queryInput').value.trim();
       if (!text) return;
 
+      const lang = document.getElementById('langSelect').value;
       const btn = document.getElementById('submitBtn');
       const btnText = document.getElementById('btnText');
       btn.disabled = true;
@@ -822,13 +1061,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: text,
-            language: 'en',
-            voice_requested: false
+            language: lang,
+            voice_requested: true
           })
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+        lastResponseData = data;
 
         // Render Advisory
         document.getElementById('advisoryText').textContent = data.advisory_text;
@@ -860,6 +1100,121 @@
       } finally {
         btn.disabled = false;
         btnText.innerHTML = 'Analyze Weather & Generate Advisory';
+      }
+    }
+
+    // GPS Auto-detect
+    function useCurrentLocation() {
+      const input = document.getElementById('queryInput');
+      const gpsBtn = document.getElementById('gpsBtn');
+      if ('geolocation' in navigator) {
+        gpsBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude.toFixed(4);
+            const lon = pos.coords.longitude.toFixed(4);
+            input.value = `Current weather forecast and risk advisory for Lat ${lat}, Lon ${lon}`;
+            gpsBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+            runQuery();
+          },
+          (err) => {
+            console.warn("Geolocation error:", err);
+            gpsBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+            input.value = "Weather forecast and emergency advisory for Chennai";
+            runQuery();
+          },
+          { timeout: 5000 }
+        );
+      } else {
+        alert("Geolocation is not supported by your browser.");
+      }
+    }
+
+    // Copy Advisory
+    function copyAdvisory() {
+      const advText = document.getElementById('advisoryText').innerText;
+      const copyText = document.getElementById('copyText');
+      const copyIcon = document.getElementById('copyIcon');
+      navigator.clipboard.writeText(advText).then(() => {
+        copyText.textContent = 'Copied!';
+        copyIcon.className = 'fa-solid fa-check';
+        setTimeout(() => {
+          copyText.textContent = 'Copy';
+          copyIcon.className = 'fa-regular fa-copy';
+        }, 2000);
+      });
+    }
+
+    // Share to WhatsApp
+    function shareWhatsApp() {
+      const advText = document.getElementById('advisoryText').innerText;
+      const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent('🚨 *WeatherGPT Disaster Advisory*\n\n' + advText + '\n\n_Powered by WeatherGPT (Team Griffins)_')}`;
+      window.open(shareUrl, '_blank');
+    }
+
+    // ── Citizen Hazard Reporting Modal ──
+    function openReportModal() {
+      document.getElementById('reportModal').style.display = 'flex';
+      // Attempt to auto-fill current location
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          window.reportCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        }, () => {});
+      }
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').style.display = 'none';
+    }
+
+    async function submitHazardReport() {
+      const btn = document.getElementById('modalSubmitBtn');
+      btn.innerHTML = '<div class="spinner"></div> Broadcasting to Map...';
+      btn.disabled = true;
+
+      const hazard_type = document.getElementById('modalHazardType').value;
+      const severity = document.getElementById('modalSeverity').value;
+      const reporter_alias = document.getElementById('modalAlias').value.trim() || "Citizen Observer";
+      const location_name = document.getElementById('modalLocation').value.trim() || "Reported Location";
+      const description = document.getElementById('modalDescription').value.trim();
+
+      const coords = window.reportCoords || { lat: 13.0827, lon: 80.2707 };
+
+      try {
+        const res = await fetch('/v1/reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hazard_type: hazard_type,
+            severity: severity,
+            lat: coords.lat,
+            lon: coords.lon,
+            location_name: location_name,
+            description: description,
+            reporter_alias: reporter_alias
+          })
+        });
+
+        if (res.ok) {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Report Live on Map!';
+          btn.style.background = '#10B981';
+
+          // Refresh map iframe to show new pin
+          setTimeout(() => {
+            const iframe = document.getElementById('mapIframe');
+            iframe.src = iframe.src;
+            closeReportModal();
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Broadcast Hazard Pin to Map';
+            btn.style.background = 'linear-gradient(135deg, #EF4444, #F59E0B)';
+            btn.disabled = false;
+          }, 1200);
+        } else {
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch (err) {
+        console.error("Report submit error:", err);
+        btn.innerHTML = 'Error Submitting. Try Again.';
+        btn.disabled = false;
       }
     }
   </script>

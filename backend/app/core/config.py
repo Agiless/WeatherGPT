@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"  # Configurable: gemini-2.5-flash, gemini-2.0-flash
 
+    # ── Bhashini (Voice ASR / NMT / TTS) ──────────────────────
+    bhashini_user_id: str = ""
+    bhashini_api_key: str = ""
+    bhashini_inference_api_key: str = ""
+    bhashini_pipeline_url: str = "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
+
     # ── Server ────────────────────────────────────────────────
     host: str = "0.0.0.0"
     port: int = 8000

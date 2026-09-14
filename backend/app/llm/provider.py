@@ -43,8 +43,8 @@ async def _call_gemini(
     Uses preferred_model first, falling back to other Gemini Flash variants.
     Logs request and response in terminal.
     """
-    # Build model list: preferred model first, then fallbacks
-    all_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    # Build model list: preferred model first, then fast reliable fallbacks
+    all_models = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite", "gemini-pro-latest"]
     models = [preferred_model] + [m for m in all_models if m != preferred_model]
     last_err = None
 

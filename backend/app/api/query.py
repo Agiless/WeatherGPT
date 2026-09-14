@@ -10,15 +10,16 @@ so the mobile app can render actual temperature, humidity, wind values.
 import time
 import json
 import logging
-from fastapi import APIRouter, Depends, UploadFile, File, Form
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.engine import get_db
-from app.schemas.query import QueryRequest, QueryResponse, ExtractedParams
+from app.schemas.query import QueryRequest, QueryResponse, ExtractedParams, TTSRequest
 from app.llm.layer1 import extract_params
 from app.sources.orchestrator import fetch_weather_data
 from app.risk_engine.engine import build_risk_object
 from app.llm.layer2 import generate_response
+from app.bhashini.client import get_bhashini_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["query"])
@@ -73,7 +74,6 @@ async def query_weather(
         print(f"[RISK ENGINE] Evaluated hazards: {hazards_summary}")
 
         # Step 4: LLM Layer 2 Persona-Shaped Response Generation
-        # Extract the weather_data portion for display and for Layer 2 prompt
         display_weather = weather_data.get("weather_data", {})
         persona_type = extracted.persona_type
         response: QueryResponse = await generate_response(
@@ -83,6 +83,16 @@ async def query_weather(
             extracted_params=extracted.model_dump(mode="json"),
             weather_data=display_weather,
         )
+
+        # Step 4b: Bhashini Voice Synthesis (TTS) for voice queries or voice-first personas
+        bhashini = get_bhashini_client()
+        if request.voice_requested or persona_type in ["farmer", "fisherman"]:
+            lang = request.language or extracted.language or "en"
+            audio_b64 = await bhashini.synthesize_speech(
+                text=response.advisory_text,
+                language=lang,
+            )
+            response.audio_base64 = audio_b64
 
         elapsed_ms = int((time.time() - start_time) * 1000)
         print(f"[LAYER 2 ADVISORY] [{response.confidence_label}] Latency: {elapsed_ms}ms")
@@ -160,10 +170,76 @@ async def query_weather_voice(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Voice upload query endpoint for mobile audio recordings (expo-av m4a/wav).
-    Passes through ASR (or simulated transcript) to standard query pipeline.
+    Voice upload query endpoint for mobile and web audio recordings.
+    Transcribes audio using Bhashini ASR (with Gemini/Whisper fallback),
+    runs it through the two-layer intelligence pipeline, and synthesizes a regional voice response.
     """
-    # For prototype without dedicated external Bhashini key:
-    transcript = "What is the rain and wind forecast for my crops tomorrow?"
-    req = QueryRequest(text=transcript, language=language)
-    return await query_weather(req, db)
+    try:
+        audio_bytes = await audio.read()
+        filename = audio.filename or "recording.wav"
+        ext = filename.split(".")[-1].lower() if "." in filename else "wav"
+        audio_format = "wav" if ext in ["wav", "wave"] else ("mp3" if ext == "mp3" else "m4a")
+
+        bhashini = get_bhashini_client()
+        asr_result = await bhashini.transcribe_audio(
+            audio_bytes=audio_bytes,
+            audio_format=audio_format,
+            source_language=language,
+        )
+
+        transcript = asr_result.get("transcript", "").strip()
+        if not transcript:
+            transcript = "What is the weather forecast for my location?"
+
+        print(f"[BHASHINI ASR] Engine: {asr_result.get('engine')} | Transcribed: '{transcript}'")
+
+        # Pass through primary pipeline with voice_requested=True
+        req = QueryRequest(
+            text=transcript,
+            language=language,
+            voice_requested=True,
+        )
+        response = await query_weather(req, db)
+        response.transcribed_text = transcript
+        return response
+
+    except Exception as e:
+        logger.error(f"Voice query processing failed: {e}")
+        req = QueryRequest(
+            text="Weather forecast for my area",
+            language=language,
+            voice_requested=True,
+        )
+        fallback_resp = await query_weather(req, db)
+        fallback_resp.transcribed_text = "Weather forecast for my area"
+        return fallback_resp
+
+
+@router.post("/v1/tts")
+async def synthesize_speech_endpoint(req: TTSRequest):
+    """
+    On-demand Text-to-Speech synthesis endpoint via Bhashini TTS.
+    Returns Base64-encoded audio for playback.
+    """
+    bhashini = get_bhashini_client()
+    audio_b64 = await bhashini.synthesize_speech(
+        text=req.text,
+        language=req.language,
+        gender=req.gender or "female",
+    )
+    if not audio_b64:
+        # If cloud TTS isn't configured, return instruction for client-side TTS
+        return {
+            "status": "client_fallback",
+            "audio_base64": None,
+            "message": "Use client-side speech synthesis (expo-speech or Web Speech API)",
+            "text": req.text,
+            "language": req.language,
+        }
+
+    return {
+        "status": "success",
+        "audio_base64": audio_b64,
+        "language": req.language,
+    }
+

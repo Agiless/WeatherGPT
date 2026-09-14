@@ -103,3 +103,28 @@ async def test_maps_and_warnings():
         r_warn = await client.get("/v1/warnings/active")
         assert r_warn.status_code == 200
         assert r_warn.json()["status"] == "active"
+
+
+@pytest.mark.asyncio
+async def test_crowdsourced_reports():
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        # Get reports
+        r_get = await client.get("/v1/reports")
+        assert r_get.status_code == 200
+        assert r_get.json()["type"] == "FeatureCollection"
+        assert len(r_get.json()["features"]) > 0
+
+        # Post report
+        r_post = await client.post(
+            "/v1/reports",
+            json={
+                "hazard_type": "waterlogging",
+                "severity": "high",
+                "lat": 13.0827,
+                "lon": 80.2707,
+                "location_name": "Anna Nagar, Chennai",
+                "description": "Water logging test"
+            }
+        )
+        assert r_post.status_code == 201
+        assert r_post.json()["hazard_type"] == "waterlogging"

@@ -124,7 +124,7 @@ async def extract_params(
                 system_prompt=SYSTEM_PROMPT,
                 user_prompt=user_msg,
                 json_mode=True,
-                max_tokens=512,
+                max_tokens=2048,
                 temperature=0.05,  # Very low temperature for deterministic extraction
             )
             data = json.loads(raw)

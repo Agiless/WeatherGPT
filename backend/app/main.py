@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health, personas, profile, query, maps, warnings, risk_snapshot
+from app.api import health, personas, profile, query, maps, warnings, risk_snapshot, reports
 from app.db.engine import get_engine, dispose_engine
 
 
@@ -76,6 +76,11 @@ async def serve_web_ui():
     return HTMLResponse(content="<h1>WeatherGPT Web UI loading...</h1>")
 
 
+@app.get("/health")
+async def root_health():
+    return {"status": "ok", "app": "WeatherGPT", "version": "1.0.0"}
+
+
 # ── Register routers ─────────────────────────────────────
 app.include_router(health.router)
 app.include_router(personas.router)
@@ -84,4 +89,5 @@ app.include_router(query.router)
 app.include_router(maps.router)
 app.include_router(warnings.router)
 app.include_router(risk_snapshot.router)
+app.include_router(reports.router)
 

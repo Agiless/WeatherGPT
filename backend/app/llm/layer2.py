@@ -201,7 +201,7 @@ async def generate_response(
             system_prompt=system_prompt,
             user_prompt=user_msg,
             json_mode=True,
-            max_tokens=1024,
+            max_tokens=2048,
             temperature=0.3,
         )
         data = json.loads(raw)
