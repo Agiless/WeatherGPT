@@ -876,12 +876,6 @@ export default function HomeScreen({ navigation }: Props) {
         onRequestClose={() => setIsDrawerOpen(false)}
       >
         <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={styles.modalBackdrop}
-            activeOpacity={1}
-            onPress={() => setIsDrawerOpen(false)}
-          />
-
           <View style={styles.drawerContainer}>
             <View style={styles.drawerHeader}>
               <View style={styles.drawerBrand}>
@@ -952,6 +946,12 @@ export default function HomeScreen({ navigation }: Props) {
               </TouchableOpacity>
             </View>
           </View>
+
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setIsDrawerOpen(false)}
+          />
         </View>
       </Modal>
 
