@@ -24,15 +24,28 @@ const PERSONAS = [
   { id: "aviation", label: "Aviation", color: "#34D399" },
 ];
 
+const LANGUAGES = [
+  { code: "ta", label: "தமிழ்", sub: "Tamil" },
+  { code: "en", label: "English", sub: "Global" },
+  { code: "hi", label: "हिंदी", sub: "Hindi" },
+  { code: "te", label: "తెలుగు", sub: "Telugu" },
+  { code: "bn", label: "বাংলা", sub: "Bengali" },
+  { code: "mr", label: "मराठी", sub: "Marathi" },
+];
+
 export default function SettingsScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const [activePersona, setActivePersona] = useState("generic");
+  const [activePersona, setActivePersona] = useState("farmer");
+  const [activeLang, setActiveLang] = useState("ta");
   const [voiceDefault, setVoiceDefault] = useState(false);
   const [metricUnits, setMetricUnits] = useState(true);
 
   useEffect(() => {
     AsyncStorage.getItem("persona_type").then((p) => {
       if (p) setActivePersona(p);
+    });
+    AsyncStorage.getItem("preferred_language").then((l) => {
+      if (l) setActiveLang(l);
     });
   }, []);
 
@@ -42,11 +55,23 @@ export default function SettingsScreen({ navigation }: Props) {
     try {
       await updateProfile({ persona_type: pId });
     } catch {}
-    Alert.alert("Persona Updated", `Switched to ${pId.replace(/_/g, " ")}. Next queries will adapt to this profile.`);
+    Alert.alert("Persona Updated", `Switched to ${pId.replace(/_/g, " ")}. Weather queries will now adapt to this role.`);
+  };
+
+  const handleSelectLanguage = async (lCode: string) => {
+    setActiveLang(lCode);
+    await AsyncStorage.setItem("preferred_language", lCode);
+    await AsyncStorage.setItem("language", lCode);
+    try {
+      await updateProfile({ preferred_language: lCode });
+    } catch {}
+    Alert.alert("Language Updated", `Switched to ${LANGUAGES.find(l => l.code === lCode)?.label || lCode}. Advisories and voice will speak in this language.`);
   };
 
   const handleClearCache = async () => {
-    Alert.alert("Clear Cache", "Cached forecasts and logs cleared successfully.");
+    await AsyncStorage.removeItem("weathergpt_black_gold_sessions_v1");
+    await AsyncStorage.removeItem("chat_history_v3");
+    Alert.alert("Clear Cache", "Cached forecasts, logs, and sessions cleared successfully.");
   };
 
   return (
@@ -57,7 +82,7 @@ export default function SettingsScreen({ navigation }: Props) {
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
           <Text style={styles.title}>Settings & Profile</Text>
-          <Text style={styles.subtitle}>Preferences & Configuration</Text>
+          <Text style={styles.subtitle}>Preferences & Language</Text>
         </View>
         <View style={{ width: 38 }} />
       </View>
@@ -70,6 +95,42 @@ export default function SettingsScreen({ navigation }: Props) {
         ]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Language Selection Section */}
+        <Text style={styles.sectionHeader}>Preferred Language</Text>
+        <View style={styles.langGrid}>
+          {LANGUAGES.map((l) => {
+            const isSelected = activeLang === l.code;
+            return (
+              <TouchableOpacity
+                key={l.code}
+                style={[
+                  styles.langBtn,
+                  isSelected && styles.langBtnActive,
+                ]}
+                onPress={() => handleSelectLanguage(l.code)}
+              >
+                <Text
+                  style={[
+                    styles.langBtnText,
+                    isSelected && styles.langBtnTextActive,
+                  ]}
+                >
+                  {l.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.langBtnSub,
+                    isSelected && styles.langBtnSubActive,
+                  ]}
+                >
+                  {l.sub}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Persona Selection Section */}
         <Text style={styles.sectionHeader}>Switch Persona</Text>
         <View style={styles.personaGrid}>
           {PERSONAS.map((p) => {
@@ -159,8 +220,8 @@ export default function SettingsScreen({ navigation }: Props) {
             <Ionicons name="trash-outline" size={18} color="#EF4444" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.actionRowText, { color: "#EF4444" }]}>Clear Cached Forecasts</Text>
-            <Text style={styles.actionRowSub}>Free up local storage & session state</Text>
+            <Text style={[styles.actionRowText, { color: "#EF4444" }]}>Clear Cached Forecasts & History</Text>
+            <Text style={styles.actionRowSub}>Free up local storage & reset chat sessions</Text>
           </View>
         </TouchableOpacity>
       </ScrollView>
@@ -206,6 +267,25 @@ const styles = StyleSheet.create({
     marginTop: 18,
     marginBottom: 12,
   },
+  langGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 12 },
+  langBtn: {
+    width: "31%",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: "#141416",
+    borderWidth: 1,
+    borderColor: "#27272A",
+    alignItems: "center",
+  },
+  langBtnActive: {
+    borderColor: "#D4AF37",
+    backgroundColor: "rgba(212, 175, 55, 0.14)",
+  },
+  langBtnText: { color: "#FFFDF7", fontSize: 13, fontWeight: "700" },
+  langBtnTextActive: { color: "#D4AF37" },
+  langBtnSub: { color: "#71717A", fontSize: 10, marginTop: 2 },
+  langBtnSubActive: { color: "rgba(212, 175, 55, 0.85)" },
   personaGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 12 },
   personaBtn: {
     paddingVertical: 10,

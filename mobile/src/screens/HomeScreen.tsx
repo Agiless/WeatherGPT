@@ -24,7 +24,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Speech from "expo-speech";
-import { apiRequest, getApiBase } from "../api/client";
+import { apiRequest, getApiBase, updateProfile } from "../api/client";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -50,6 +50,24 @@ type ChatSession = {
 };
 
 type Props = { navigation: any };
+
+const QUICK_LANGUAGES = [
+  { code: "ta", label: "தமிழ்", sub: "Tamil" },
+  { code: "en", label: "English", sub: "Global" },
+  { code: "hi", label: "हिंदी", sub: "Hindi" },
+  { code: "te", label: "తెలుగు", sub: "Telugu" },
+  { code: "bn", label: "বাংলা", sub: "Bengali" },
+  { code: "mr", label: "मराठी", sub: "Marathi" },
+];
+
+const QUICK_PERSONAS = [
+  { id: "farmer", label: "🌾 Farmer", sub: "Crops & Rain" },
+  { id: "fisherman", label: "🌊 Fisherman", sub: "Waves & Gusts" },
+  { id: "researcher_scientist", label: "🔬 Researcher", sub: "Radar & Models" },
+  { id: "logistics", label: "🚚 Logistics", sub: "Roads & Storms" },
+  { id: "traveller", label: "✈️ Traveller", sub: "Pack & Tour" },
+  { id: "generic", label: "👤 General", sub: "Everyday" },
+];
 
 const CLAUDE_PROMPTS = [
   {
@@ -98,9 +116,27 @@ export default function HomeScreen({ navigation }: Props) {
 
   // Modals
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isQuickSwitchOpen, setIsQuickSwitchOpen] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const [voiceModeStatus, setVoiceModeStatus] = useState<"listening" | "thinking" | "speaking">("listening");
   const [voiceModeTranscript, setVoiceModeTranscript] = useState("");
+
+  const handleQuickChangeLanguage = async (newLang: string) => {
+    setLanguage(newLang);
+    await AsyncStorage.setItem("preferred_language", newLang);
+    await AsyncStorage.setItem("language", newLang);
+    try {
+      await updateProfile({ preferred_language: newLang });
+    } catch {}
+  };
+
+  const handleQuickChangePersona = async (newPersona: string) => {
+    setPersona(newPersona);
+    await AsyncStorage.setItem("persona_type", newPersona);
+    try {
+      await updateProfile({ persona_type: newPersona });
+    } catch {}
+  };
 
   // Animations
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -612,7 +648,11 @@ export default function HomeScreen({ navigation }: Props) {
             <Ionicons name="menu-outline" size={22} color="#D4AF37" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.modelSelectorPill} onPress={() => setIsDrawerOpen(true)}>
+          <TouchableOpacity
+            style={styles.modelSelectorPill}
+            onPress={() => setIsQuickSwitchOpen(true)}
+            title="Switch Language & Persona"
+          >
             <Text style={styles.modelNameText}>WeatherGPT 2.5</Text>
             <View style={styles.modelBadge}>
               <Text style={styles.modelBadgeText}>
@@ -876,10 +916,11 @@ export default function HomeScreen({ navigation }: Props) {
 
               <TouchableOpacity
                 style={styles.dockPill}
-                onPress={() => navigation.navigate("Settings")}
+                onPress={() => setIsQuickSwitchOpen(true)}
+                title="Tap to change Language or Persona"
               >
                 <Text style={styles.dockPillText}>
-                  {persona === "farmer" ? "🌾 Farmer" : persona} • {language.toUpperCase()}
+                  {persona === "farmer" ? "🌾 Farmer" : persona} • {language.toUpperCase()} ▾
                 </Text>
               </TouchableOpacity>
             </View>
@@ -989,6 +1030,84 @@ export default function HomeScreen({ navigation }: Props) {
             activeOpacity={1}
             onPress={() => setIsDrawerOpen(false)}
           />
+        </View>
+      </Modal>
+
+      {/* ── QUICK LANGUAGE & PERSONA SWITCHER MODAL ── */}
+      <Modal
+        visible={isQuickSwitchOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsQuickSwitchOpen(false)}
+      >
+        <View style={styles.quickModalOverlay}>
+          <TouchableOpacity
+            style={styles.quickModalBackdrop}
+            activeOpacity={1}
+            onPress={() => setIsQuickSwitchOpen(false)}
+          />
+
+          <View style={styles.quickModalCard}>
+            <View style={styles.quickModalHeader}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Ionicons name="globe-outline" size={20} color="#D4AF37" />
+                <Text style={styles.quickModalTitle}>Language & Role</Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsQuickSwitchOpen(false)}>
+                <Ionicons name="close" size={20} color="#A1A1AA" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Language Selection */}
+            <Text style={styles.quickSectionLabel}>Select Language (மொழி)</Text>
+            <View style={styles.quickLangGrid}>
+              {QUICK_LANGUAGES.map((l) => {
+                const isActive = language === l.code;
+                return (
+                  <TouchableOpacity
+                    key={l.code}
+                    style={[styles.quickLangBtn, isActive && styles.quickLangBtnActive]}
+                    onPress={() => {
+                      handleQuickChangeLanguage(l.code);
+                      setIsQuickSwitchOpen(false);
+                    }}
+                  >
+                    <Text style={[styles.quickLangLabel, isActive && styles.quickLangLabelActive]}>
+                      {l.label}
+                    </Text>
+                    <Text style={[styles.quickLangSub, isActive && styles.quickLangSubActive]}>
+                      {l.sub}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Persona Selection */}
+            <Text style={[styles.quickSectionLabel, { marginTop: 14 }]}>Switch Domain Role</Text>
+            <View style={styles.quickPersonaGrid}>
+              {QUICK_PERSONAS.map((p) => {
+                const isActive = persona === p.id;
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    style={[styles.quickPersonaBtn, isActive && styles.quickPersonaBtnActive]}
+                    onPress={() => {
+                      handleQuickChangePersona(p.id);
+                      setIsQuickSwitchOpen(false);
+                    }}
+                  >
+                    <Text style={[styles.quickPersonaLabel, isActive && styles.quickPersonaLabelActive]}>
+                      {p.label}
+                    </Text>
+                    <Text style={styles.quickPersonaSub} numberOfLines={1}>
+                      {p.sub}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
         </View>
       </Modal>
 
@@ -1645,5 +1764,123 @@ const styles = StyleSheet.create({
     color: "#09090B",
     fontSize: 12.5,
     fontWeight: "700",
+  },
+
+  /* ── Quick Switcher Modal Styles ── */
+  quickModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  quickModalBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  quickModalCard: {
+    width: "100%",
+    maxWidth: 380,
+    backgroundColor: "#141416",
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "rgba(212, 175, 55, 0.35)",
+    padding: 20,
+    shadowColor: "#D4AF37",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+  },
+  quickModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(212, 175, 55, 0.15)",
+    paddingBottom: 12,
+  },
+  quickModalTitle: {
+    color: "#FFFDF7",
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+  },
+  quickSectionLabel: {
+    color: "#D4AF37",
+    fontSize: 11.5,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  quickLangGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  quickLangBtn: {
+    width: "31%",
+    backgroundColor: "#1C1C20",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#27272A",
+  },
+  quickLangBtnActive: {
+    borderColor: "#D4AF37",
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
+  },
+  quickLangLabel: {
+    color: "#FFFDF7",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  quickLangLabelActive: {
+    color: "#D4AF37",
+  },
+  quickLangSub: {
+    color: "#71717A",
+    fontSize: 10,
+    marginTop: 2,
+  },
+  quickLangSubActive: {
+    color: "rgba(212, 175, 55, 0.85)",
+  },
+  quickPersonaGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  quickPersonaBtn: {
+    width: "48%",
+    backgroundColor: "#1C1C20",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "#27272A",
+  },
+  quickPersonaBtnActive: {
+    borderColor: "#D4AF37",
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
+  },
+  quickPersonaLabel: {
+    color: "#FFFDF7",
+    fontSize: 12.5,
+    fontWeight: "700",
+  },
+  quickPersonaLabelActive: {
+    color: "#D4AF37",
+  },
+  quickPersonaSub: {
+    color: "#71717A",
+    fontSize: 10,
+    marginTop: 2,
   },
 });
