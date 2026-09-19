@@ -4,10 +4,20 @@
  * NEVER use "localhost" — on the phone that is the phone itself.
  */
 
+import { Platform } from "react-native";
 import Constants from "expo-constants";
 
-const API_BASE =
-  Constants.expoConfig?.extra?.apiBaseUrl || "http://10.184.48.67:8000";
+export function getApiBase(): string {
+  if (Platform.OS === "web") {
+    if (typeof window !== "undefined" && window.location && window.location.hostname) {
+      return `${window.location.protocol}//${window.location.hostname}:8000`;
+    }
+    return "http://localhost:8000";
+  }
+  return Constants.expoConfig?.extra?.apiBaseUrl || "http://192.168.137.168:8000";
+}
+
+const API_BASE = getApiBase();
 
 interface RequestOptions {
   method?: string;

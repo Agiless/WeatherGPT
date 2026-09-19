@@ -174,6 +174,7 @@ async def generate_response(
     risk_object: dict,
     extracted_params: dict,
     weather_data: dict | None = None,
+    language: str = "en",
 ) -> QueryResponse:
     """Generate a persona-shaped response from the risk object and weather data."""
     config = PERSONA_CONFIGS.get(persona_type, PERSONA_CONFIGS["generic"])
@@ -186,8 +187,11 @@ async def generate_response(
 
     risk_summary = _format_risk_summary(risk_object)
 
+    lang_note = f"Respond naturally in language code '{language}' (e.g. Tamil script for 'ta', Hindi for 'hi', English for 'en'). If user wrote in Tanglish/Hinglish or asked conversational questions (e.g., 'onaku tamil theriyum ma?'), answer conversationally in that language while incorporating the weather advisory."
+
     user_msg = (
         f"User query: {query}\n\n"
+        f"Target Language: {language} ({lang_note})\n\n"
         f"Extracted parameters: {json.dumps(extracted_params, default=str)}\n\n"
         f"--- WEATHER DATA (use ONLY these numbers) ---\n"
         f"{weather_summary}\n\n"

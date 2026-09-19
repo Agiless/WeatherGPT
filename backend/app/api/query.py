@@ -76,12 +76,15 @@ async def query_weather(
         # Step 4: LLM Layer 2 Persona-Shaped Response Generation
         display_weather = weather_data.get("weather_data", {})
         persona_type = extracted.persona_type
+        # Step 4: LLM Layer 2 Response Generation
+        lang = request.language or extracted.language or "en"
         response: QueryResponse = await generate_response(
             query=raw_query,
             persona_type=persona_type,
             risk_object=risk_obj.model_dump(mode="json"),
             extracted_params=extracted.model_dump(mode="json"),
-            weather_data=display_weather,
+            weather_data=weather_data,
+            language=lang,
         )
 
         # Step 4b: Bhashini Voice Synthesis (TTS) for voice queries or voice-first personas

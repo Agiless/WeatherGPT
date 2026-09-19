@@ -75,17 +75,26 @@ async def _call_gemini(
                     if candidates and "content" in candidates[0] and "parts" in candidates[0]["content"]:
                         raw_text = candidates[0]["content"]["parts"][0].get("text", "")
                         cleaned = _clean_json_text(raw_text) if json_mode else raw_text
-                        print(f"[GEMINI RESPONSE] 200 OK | {len(cleaned)} chars")
-                        preview = cleaned[:180].replace("\n", " ")
-                        print(f"  Preview: {preview}...")
+                        try:
+                            print(f"[GEMINI RESPONSE] 200 OK | {len(cleaned)} chars")
+                            preview = cleaned[:180].replace("\n", " ")
+                            print(f"  Preview: {preview}...")
+                        except Exception:
+                            pass
                         return cleaned
                     raise ValueError(f"Unexpected Gemini candidate structure: {data}")
 
                 print(f"[GEMINI ERROR] Model: {model} | HTTP {response.status_code}")
-                print(f"  Response: {response.text[:300]}")
+                try:
+                    print(f"  Response: {response.text[:300]}")
+                except Exception:
+                    pass
                 last_err = Exception(f"Gemini API error ({model}): {response.status_code} {response.text[:200]}")
             except Exception as e:
-                print(f"[GEMINI EXCEPTION] Model {model} failed: {e}")
+                try:
+                    print(f"[GEMINI EXCEPTION] Model {model} failed: {e}")
+                except Exception:
+                    pass
                 last_err = e
 
     if last_err:
