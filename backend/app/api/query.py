@@ -87,15 +87,17 @@ async def query_weather(
             language=lang,
         )
 
-        # Step 4b: Bhashini Voice Synthesis (TTS) for voice queries or voice-first personas
+        # Step 4b: Indic Voice Synthesis (TTS)
         bhashini = get_bhashini_client()
-        if request.voice_requested or persona_type in ["farmer", "fisherman"]:
-            lang = request.language or extracted.language or "en"
+        lang = request.language or extracted.language or "ta"
+        try:
             audio_b64 = await bhashini.synthesize_speech(
                 text=response.advisory_text,
                 language=lang,
             )
             response.audio_base64 = audio_b64
+        except Exception as e:
+            logger.warning(f"TTS synthesis error: {e}")
 
         elapsed_ms = int((time.time() - start_time) * 1000)
         print(f"[LAYER 2 ADVISORY] [{response.confidence_label}] Latency: {elapsed_ms}ms")

@@ -246,38 +246,29 @@ class BhashiniClient:
         # Clip text if longer than 500 characters to respect Bhashini TTS limits
         tts_text = text[:450]
 
-        if self.is_configured():
-            try:
-                headers = {
-                    "Content-Type": "application/json",
-                    "User-ID": self.user_id,
-                    "ulcaApiKey": self.api_key,
-                    "Authorization": self.inference_key,
-                }
-                payload = {
-                    "pipelineTasks": [
-                        {
-                            "taskType": "tts",
-                            "config": {
-                                "language": {"sourceLanguage": lang},
-                                "gender": gender if gender in ["female", "male"] else "female",
-                                "samplingRate": 22050,
-                            },
-                        }
-                    ],
-                    "inputData": {"input": [{"source": tts_text}]},
-                }
-                async with httpx.AsyncClient(timeout=12.0) as client:
-                    resp = await client.post(self.pipeline_url, json=payload, headers=headers)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        for task in data.get("pipelineResponse", []):
-                            if task.get("taskType") == "tts":
-                                audio_list = task.get("audio", [])
-                                if audio_list and "audioContent" in audio_list[0]:
-                                    return audio_list[0]["audioContent"]
-            except Exception as e:
-                logger.warning(f"Bhashini TTS error: {e}")
+        # ── Fallback Indic TTS Synthesis Engine (Tamil, Hindi, Telugu, etc.) ──
+        try:
+            import base64
+            # Clean text for TTS (remove markdown asterisks, emojis, hashtags)
+            clean_tts = tts_text.replace("*", "").replace("#", "").replace("`", "").strip()
+            # If long text, pick the first 200 chars for smooth speech delivery
+            if len(clean_tts) > 220:
+                clean_tts = clean_tts[:200].rsplit(".", 1)[0] + "."
+
+            tts_url = "https://translate.google.com/translate_tts"
+            params = {
+                "ie": "UTF-8",
+                "q": clean_tts,
+                "tl": lang,
+                "client": "tw-ob",
+            }
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                r = await client.get(tts_url, params=params, headers=headers)
+                if r.status_code == 200 and len(r.content) > 500:
+                    return base64.b64encode(r.content).decode("utf-8")
+        except Exception as e:
+            logger.warning(f"Indic TTS synthesis fallback error: {e}")
 
         return None
 

@@ -221,19 +221,74 @@ export default function HomeScreen({ navigation }: Props) {
     }
   };
 
-  const handleSpeak = (msgId: string, text: string) => {
+  const currentAudioRef = useRef<any>(null);
+
+  const handleSpeak = async (msgId: string, text: string, rawResponse?: any) => {
+    // 1. Stop any currently playing audio
     if (playingMessageId === msgId) {
+      if (currentAudioRef.current) {
+        try {
+          currentAudioRef.current.pause();
+        } catch {}
+        currentAudioRef.current = null;
+      }
       Speech.stop();
       setPlayingMessageId(null);
-    } else {
-      Speech.stop();
-      setPlayingMessageId(msgId);
-      Speech.speak(text, {
-        language: language === "ta" ? "ta-IN" : language === "hi" ? "hi-IN" : "en-US",
-        onDone: () => setPlayingMessageId(null),
-        onError: () => setPlayingMessageId(null),
-      });
+      return;
     }
+
+    if (currentAudioRef.current) {
+      try {
+        currentAudioRef.current.pause();
+      } catch {}
+      currentAudioRef.current = null;
+    }
+    Speech.stop();
+    setPlayingMessageId(msgId);
+
+    // 2. Check if we have audio_base64 from backend response
+    let audioB64 = rawResponse?.audio_base64;
+    if (!audioB64) {
+      try {
+        const ttsRes = await apiRequest("/v1/tts", {
+          method: "POST",
+          body: {
+            text: text,
+            language: language || "ta",
+          },
+        });
+        audioB64 = ttsRes?.audio_base64;
+      } catch (e) {
+        console.warn("TTS fetch error:", e);
+      }
+    }
+
+    // 3. If we have native Indic audio base64, play it directly!
+    if (audioB64 && Platform.OS === "web") {
+      try {
+        const audio = new Audio("data:audio/mp3;base64," + audioB64);
+        currentAudioRef.current = audio;
+        audio.onended = () => {
+          setPlayingMessageId(null);
+          currentAudioRef.current = null;
+        };
+        audio.onerror = () => {
+          setPlayingMessageId(null);
+          currentAudioRef.current = null;
+        };
+        await audio.play();
+        return;
+      } catch (err) {
+        console.warn("Web audio playback failed:", err);
+      }
+    }
+
+    // 4. Fallback to client-side Speech
+    Speech.speak(text, {
+      language: language === "ta" ? "ta-IN" : language === "hi" ? "hi-IN" : language === "te" ? "te-IN" : "en-US",
+      onDone: () => setPlayingMessageId(null),
+      onError: () => setPlayingMessageId(null),
+    });
   };
 
   const handleShare = async (text: string) => {
@@ -407,7 +462,7 @@ export default function HomeScreen({ navigation }: Props) {
                     <View style={styles.actionIcons}>
                       <TouchableOpacity
                         style={styles.actionBtn}
-                        onPress={() => handleSpeak(msg.id, msg.text)}
+                        onPress={() => handleSpeak(msg.id, msg.text, msg.rawResponse)}
                       >
                         <Ionicons
                           name={isPlaying ? "stop-circle" : "volume-high-outline"}
