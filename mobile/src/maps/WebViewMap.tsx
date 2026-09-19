@@ -1,5 +1,6 @@
 /**
  * WebViewMap — Mapbox GL JS inside React Native WebView
+ * Luxury Black & Gold Theme (#09090B + #D4AF37)
  * This allows full GPU Mapbox GL JS rendering inside Expo Go without native modules.
  */
 
@@ -31,7 +32,7 @@ export default function WebViewMap({ mode, onPointTap }: WebViewMapProps) {
             width: "100%",
             height: "100%",
             border: "none",
-            backgroundColor: "#0F172A",
+            backgroundColor: "#09090B",
           }}
           title="WeatherGPT GIS Radar Map"
         />
@@ -64,8 +65,8 @@ export default function WebViewMap({ mode, onPointTap }: WebViewMapProps) {
         onMessage={handleMessage}
         renderLoading={() => (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#60A5FA" />
-            <Text style={styles.loadingText}>Initializing Mapbox Engine...</Text>
+            <ActivityIndicator size="large" color="#D4AF37" />
+            <Text style={styles.loadingText}>Initializing GIS Doppler Map...</Text>
           </View>
         )}
         renderError={() => (
@@ -84,7 +85,7 @@ export default function WebViewMap({ mode, onPointTap }: WebViewMapProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: "#09090B",
   },
   webview: {
     flex: 1,
@@ -96,14 +97,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#0F172A",
+    backgroundColor: "#09090B",
     justifyContent: "center",
     alignItems: "center",
     gap: 12,
   },
   loadingText: {
-    color: "#94A3B8",
+    color: "#D4AF37",
     fontSize: 13,
+    fontWeight: "600",
   },
   errorContainer: {
     position: "absolute",
@@ -111,19 +113,19 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#0F172A",
+    backgroundColor: "#09090B",
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
     gap: 8,
   },
   errorTitle: {
-    color: "#F1F5F9",
+    color: "#FFFDF7",
     fontSize: 16,
     fontWeight: "700",
   },
   errorSubtitle: {
-    color: "#64748B",
+    color: "#71717A",
     fontSize: 13,
     textAlign: "center",
   },

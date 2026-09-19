@@ -1,11 +1,7 @@
 /**
  * Screen 3 — Conversational Chat Interface (WeatherGPT)
- * Styled with the exact, elegant structure and aesthetic of Claude (Anthropic Claude UI):
- * - Claude warm dark palette (#181716, #22211F, #2B2A27, warm amber/terracotta accents #D97706 / #E07A5F)
- * - Claude Sidebar Drawer (+ Start new chat, sectioned history "Today", "Previous 7 days")
- * - Claude Landing Hero with 2x2 capability cards
- * - Claude input box with embedded model/persona selector & action dock
- * - Rich Assistant message bubbles with TTS voice playback, weather metrics, and research artifacts
+ * Theme: Luxury Black & Gold (Obsidian & Metallic Gold #D4AF37)
+ * Layout: Claude Structure (Minimalist Top Bar, Sessions Drawer, 2x2 Landing, Elevated Dock, Voice Mode)
  */
 
 import React, { useState, useEffect, useRef } from "react";
@@ -147,7 +143,7 @@ export default function HomeScreen({ navigation }: Props) {
           setIsOnline(false);
         }
 
-        const rawSessions = await AsyncStorage.getItem("claude_weathergpt_sessions_v1");
+        const rawSessions = await AsyncStorage.getItem("weathergpt_black_gold_sessions_v1");
         if (rawSessions) {
           const parsed: ChatSession[] = JSON.parse(rawSessions);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -158,7 +154,7 @@ export default function HomeScreen({ navigation }: Props) {
           }
         }
 
-        // Start empty new chat on fresh session (Claude style landing)
+        // Default empty new session
         const initialSession: ChatSession = {
           id: `session-${Date.now()}`,
           title: "New Weather Chat",
@@ -179,7 +175,7 @@ export default function HomeScreen({ navigation }: Props) {
     initApp();
   }, []);
 
-  // Save sessions to storage whenever messages update
+  // Save sessions to storage
   useEffect(() => {
     if (sessions.length > 0 && currentSessionId) {
       const updated = sessions.map((s) => {
@@ -188,7 +184,7 @@ export default function HomeScreen({ navigation }: Props) {
         }
         return s;
       });
-      AsyncStorage.setItem("claude_weathergpt_sessions_v1", JSON.stringify(updated)).catch(() => {});
+      AsyncStorage.setItem("weathergpt_black_gold_sessions_v1", JSON.stringify(updated)).catch(() => {});
     }
   }, [messages]);
 
@@ -202,7 +198,6 @@ export default function HomeScreen({ navigation }: Props) {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  // ── Start New Chat (Claude Style) ──
   const handleStartNewChat = () => {
     const newSession: ChatSession = {
       id: `session-${Date.now()}`,
@@ -218,7 +213,7 @@ export default function HomeScreen({ navigation }: Props) {
     setCurrentSessionId(newSession.id);
     setMessages([]);
     setIsDrawerOpen(false);
-    AsyncStorage.setItem("claude_weathergpt_sessions_v1", JSON.stringify(updatedSessions)).catch(() => {});
+    AsyncStorage.setItem("weathergpt_black_gold_sessions_v1", JSON.stringify(updatedSessions)).catch(() => {});
   };
 
   const handleSelectSession = (session: ChatSession) => {
@@ -240,7 +235,7 @@ export default function HomeScreen({ navigation }: Props) {
         handleStartNewChat();
       }
     }
-    AsyncStorage.setItem("claude_weathergpt_sessions_v1", JSON.stringify(filtered)).catch(() => {});
+    AsyncStorage.setItem("weathergpt_black_gold_sessions_v1", JSON.stringify(filtered)).catch(() => {});
   };
 
   // ── Inline Speech Recognition ──
@@ -293,7 +288,7 @@ export default function HomeScreen({ navigation }: Props) {
       }
     }
 
-    // Simulated fallback
+    // Fallback simulation
     setIsListening(true);
     const demoVoiceQueries: Record<string, string> = {
       ta: "நாளைக்கு எங்க பகுதியில் மழை பெய்யுமா? பயிர் அறுவடை செய்யலாமா?",
@@ -317,7 +312,7 @@ export default function HomeScreen({ navigation }: Props) {
     setIsListening(false);
   };
 
-  // ── Voice-to-Voice AI Mode ──
+  // ── Voice-to-Voice AI Loop ──
   const handleVoiceModeCycle = async (queryText: string) => {
     if (!queryText.trim()) return;
     setVoiceModeStatus("thinking");
@@ -394,7 +389,7 @@ export default function HomeScreen({ navigation }: Props) {
     }
   };
 
-  // ── Send Chat Message (Continuous Feed) ──
+  // ── Send Message ──
   const handleSendMessage = async (queryOverride?: string) => {
     const textToSend = (queryOverride || inputText).trim();
     if (!textToSend || isLoading) return;
@@ -419,7 +414,6 @@ export default function HomeScreen({ navigation }: Props) {
       timestamp: formatTime(new Date()),
     };
 
-    // Auto-update session title
     setSessions((prev) =>
       prev.map((s) => {
         if (s.id === currentSessionId && s.messages.length === 0) {
@@ -487,7 +481,7 @@ export default function HomeScreen({ navigation }: Props) {
     }
   };
 
-  // ── Audio Speech Playback via Direct Streaming ──
+  // ── Audio Speech Playback via Streaming ──
   const handleSpeak = async (msgId: string, text: string) => {
     if (playingMessageId === msgId) {
       if (currentAudioRef.current) {
@@ -557,11 +551,11 @@ export default function HomeScreen({ navigation }: Props) {
       case "high":
         return "#F59E0B";
       case "moderate":
-        return "#FBBF24";
+        return "#D4AF37";
       case "low":
         return "#10B981";
       default:
-        return "#D97706";
+        return "#D4AF37";
     }
   };
 
@@ -570,7 +564,7 @@ export default function HomeScreen({ navigation }: Props) {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      {/* ── Top App Bar (Claude Minimalist Header) ── */}
+      {/* ── Top App Bar (Black & Gold Minimalist Header) ── */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 14) + 6 }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity
@@ -578,7 +572,7 @@ export default function HomeScreen({ navigation }: Props) {
             onPress={() => setIsDrawerOpen(true)}
             title="Chat History & Sessions"
           >
-            <Ionicons name="menu-outline" size={22} color="#D4D4D0" />
+            <Ionicons name="menu-outline" size={22} color="#D4AF37" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.modelSelectorPill} onPress={() => setIsDrawerOpen(true)}>
@@ -588,21 +582,19 @@ export default function HomeScreen({ navigation }: Props) {
                 {persona === "farmer" ? "விவசாயி" : persona.toUpperCase()} • {language.toUpperCase()}
               </Text>
             </View>
-            <Ionicons name="chevron-down" size={14} color="#A3A39A" />
+            <Ionicons name="chevron-down" size={14} color="#D4AF37" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.headerRight}>
-          {/* New Chat Icon */}
           <TouchableOpacity
             style={styles.headerIconBtn}
             onPress={handleStartNewChat}
             title="New Chat"
           >
-            <Ionicons name="create-outline" size={20} color="#D4D4D0" />
+            <Ionicons name="create-outline" size={20} color="#D4AF37" />
           </TouchableOpacity>
 
-          {/* Real-time Voice Mode Button (Claude Voice Orb) */}
           <TouchableOpacity
             style={[styles.headerIconBtn, styles.voiceModeHeaderBtn]}
             onPress={() => {
@@ -612,23 +604,21 @@ export default function HomeScreen({ navigation }: Props) {
             }}
             title="Voice-to-Voice AI"
           >
-            <Ionicons name="radio" size={16} color="#D97706" />
+            <Ionicons name="radio" size={16} color="#D4AF37" />
           </TouchableOpacity>
 
-          {/* GIS Multi-Layer Map */}
           <TouchableOpacity
             style={styles.headerIconBtn}
             onPress={() => navigation.navigate("Map", { initialMode: "radar" })}
             title="GIS Multi-Layer Radar Map"
           >
-            <Ionicons name="map-outline" size={20} color="#D4D4D0" />
+            <Ionicons name="map-outline" size={20} color="#D4AF37" />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* ── Main Chat Canvas ── */}
       {messages.length === 0 ? (
-        /* Claude Style Landing Hero with 2x2 cards */
         <ScrollView
           style={styles.heroScroll}
           contentContainerStyle={styles.heroContent}
@@ -636,8 +626,8 @@ export default function HomeScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.heroHeader}>
-            <View style={styles.claudeSparkIcon}>
-              <Ionicons name="sparkles" size={24} color="#D97706" />
+            <View style={styles.goldSparkIcon}>
+              <Ionicons name="sparkles" size={24} color="#D4AF37" />
             </View>
             <Text style={styles.heroTitle}>Good evening</Text>
             <Text style={styles.heroSubtitle}>
@@ -653,7 +643,7 @@ export default function HomeScreen({ navigation }: Props) {
                 onPress={() => handleSendMessage(card.prompt)}
               >
                 <View style={styles.cardIconBox}>
-                  <Ionicons name={card.icon as any} size={18} color="#D97706" />
+                  <Ionicons name={card.icon as any} size={18} color="#D4AF37" />
                 </View>
                 <Text style={styles.cardTitle}>{card.title}</Text>
                 <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
@@ -662,7 +652,6 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         </ScrollView>
       ) : (
-        /* Claude Continuous Message Stream */
         <ScrollView
           ref={scrollViewRef}
           style={styles.chatScroll}
@@ -685,8 +674,8 @@ export default function HomeScreen({ navigation }: Props) {
                 ]}
               >
                 {!isUser && (
-                  <View style={styles.claudeAvatar}>
-                    <Ionicons name="sparkles" size={14} color="#D97706" />
+                  <View style={styles.goldAvatar}>
+                    <Ionicons name="sparkles" size={14} color="#D4AF37" />
                   </View>
                 )}
 
@@ -704,7 +693,7 @@ export default function HomeScreen({ navigation }: Props) {
                   {currentMetrics && (
                     <View style={styles.metricsBox}>
                       <View style={styles.metricItem}>
-                        <Ionicons name="thermometer-outline" size={13} color="#F59E0B" />
+                        <Ionicons name="thermometer-outline" size={13} color="#D4AF37" />
                         <Text style={styles.metricLabel}>
                           {currentMetrics.temp != null
                             ? `${Math.round(currentMetrics.temp)}°C`
@@ -756,7 +745,7 @@ export default function HomeScreen({ navigation }: Props) {
                     </View>
                   )}
 
-                  {/* Claude Action Row below Assistant response */}
+                  {/* Action Row */}
                   {!isUser && (
                     <View style={styles.actionRow}>
                       <TouchableOpacity
@@ -767,7 +756,7 @@ export default function HomeScreen({ navigation }: Props) {
                         <Ionicons
                           name={isPlaying ? "stop-circle" : "volume-medium-outline"}
                           size={16}
-                          color={isPlaying ? "#EF4444" : "#A3A39A"}
+                          color={isPlaying ? "#EF4444" : "#D4AF37"}
                         />
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -775,14 +764,14 @@ export default function HomeScreen({ navigation }: Props) {
                         onPress={() => handleShare(msg.text)}
                         title="Share"
                       >
-                        <Ionicons name="share-outline" size={15} color="#A3A39A" />
+                        <Ionicons name="share-outline" size={15} color="#A1A1AA" />
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.actionIconBtn}
                         onPress={() => navigation.navigate("Map", { initialMode: "radar" })}
                         title="Open Doppler Radar"
                       >
-                        <Ionicons name="map-outline" size={15} color="#A3A39A" />
+                        <Ionicons name="map-outline" size={15} color="#A1A1AA" />
                       </TouchableOpacity>
                     </View>
                   )}
@@ -791,14 +780,14 @@ export default function HomeScreen({ navigation }: Props) {
             );
           })}
 
-          {/* Thinking / Analyzing Indicator */}
+          {/* Thinking Indicator */}
           {isLoading && (
             <View style={[styles.messageRow, styles.messageRowAssistant]}>
-              <View style={styles.claudeAvatar}>
-                <Ionicons name="sparkles" size={14} color="#D97706" />
+              <View style={styles.goldAvatar}>
+                <Ionicons name="sparkles" size={14} color="#D4AF37" />
               </View>
               <View style={[styles.bubble, styles.bubbleAssistant, styles.loadingBubble]}>
-                <ActivityIndicator size="small" color="#D97706" />
+                <ActivityIndicator size="small" color="#D4AF37" />
                 <Text style={styles.loadingText}>Synthesizing meteorological consensus...</Text>
               </View>
             </View>
@@ -806,20 +795,20 @@ export default function HomeScreen({ navigation }: Props) {
         </ScrollView>
       )}
 
-      {/* ── Claude Style Elevated Input Box ── */}
+      {/* ── Black & Gold Elevated Input Box ── */}
       <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 12) + 6 }]}>
-        <View style={styles.claudeInputBox}>
+        <View style={styles.goldInputBox}>
           <TextInput
             style={[
               styles.textInput,
-              isListening && { color: "#FBBF24" },
+              isListening && { color: "#F59E0B" },
             ]}
             placeholder={
               isListening
                 ? `Listening in ${language.toUpperCase()}... (Speak now)`
                 : "Reply to WeatherGPT or ask about weather, crops, travel..."
             }
-            placeholderTextColor="#787774"
+            placeholderTextColor="#71717A"
             value={inputText}
             onChangeText={setInputText}
             onSubmitEditing={() => handleSendMessage()}
@@ -831,7 +820,6 @@ export default function HomeScreen({ navigation }: Props) {
           {/* Bottom dock inside input box */}
           <View style={styles.inputInnerDock}>
             <View style={styles.inputDockLeft}>
-              {/* Voice dictation mic */}
               <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
                 <TouchableOpacity
                   style={[
@@ -844,7 +832,7 @@ export default function HomeScreen({ navigation }: Props) {
                   <Ionicons
                     name={isListening ? "mic" : "mic-outline"}
                     size={18}
-                    color={isListening ? "#FFFFFF" : "#A3A39A"}
+                    color={isListening ? "#FFFFFF" : "#D4AF37"}
                   />
                 </TouchableOpacity>
               </Animated.View>
@@ -864,7 +852,7 @@ export default function HomeScreen({ navigation }: Props) {
               style={[
                 styles.sendBtn,
                 {
-                  backgroundColor: inputText.trim() ? "#D97706" : "rgba(217, 119, 6, 0.2)",
+                  backgroundColor: inputText.trim() ? "#D4AF37" : "rgba(212, 175, 55, 0.2)",
                 },
               ]}
               onPress={() => handleSendMessage()}
@@ -873,14 +861,14 @@ export default function HomeScreen({ navigation }: Props) {
               <Ionicons
                 name="arrow-up"
                 size={18}
-                color={inputText.trim() ? "#FFFFFF" : "#787774"}
+                color={inputText.trim() ? "#09090B" : "#71717A"}
               />
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      {/* ── CLAUDE SIDEBAR DRAWER ── */}
+      {/* ── BLACK & GOLD SIDEBAR DRAWER ── */}
       <Modal
         visible={isDrawerOpen}
         transparent={true}
@@ -895,11 +883,10 @@ export default function HomeScreen({ navigation }: Props) {
           />
 
           <View style={styles.drawerContainer}>
-            {/* Top Brand & Start New Chat */}
             <View style={styles.drawerHeader}>
               <View style={styles.drawerBrand}>
                 <View style={styles.drawerLogoIcon}>
-                  <Ionicons name="sparkles" size={16} color="#D97706" />
+                  <Ionicons name="sparkles" size={16} color="#09090B" />
                 </View>
                 <Text style={styles.drawerBrandText}>WeatherGPT</Text>
               </View>
@@ -907,7 +894,7 @@ export default function HomeScreen({ navigation }: Props) {
                 style={styles.drawerCloseBtn}
                 onPress={() => setIsDrawerOpen(false)}
               >
-                <Ionicons name="close" size={20} color="#A3A39A" />
+                <Ionicons name="close" size={20} color="#A1A1AA" />
               </TouchableOpacity>
             </View>
 
@@ -915,11 +902,10 @@ export default function HomeScreen({ navigation }: Props) {
               style={styles.newChatBtn}
               onPress={handleStartNewChat}
             >
-              <Ionicons name="create-outline" size={17} color="#F5F5F0" />
+              <Ionicons name="create-outline" size={17} color="#09090B" />
               <Text style={styles.newChatBtnText}>Start new chat</Text>
             </TouchableOpacity>
 
-            {/* History Sessions List */}
             <Text style={styles.drawerSectionTitle}>Recent</Text>
             <ScrollView style={styles.sessionsList} showsVerticalScrollIndicator={false}>
               {sessions.map((sess) => {
@@ -940,14 +926,13 @@ export default function HomeScreen({ navigation }: Props) {
                       style={styles.sessionDeleteBtn}
                       onPress={() => handleDeleteSession(sess.id)}
                     >
-                      <Ionicons name="trash-outline" size={13} color="#787774" />
+                      <Ionicons name="trash-outline" size={13} color="#71717A" />
                     </TouchableOpacity>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
 
-            {/* Bottom User Info */}
             <View style={styles.drawerFooter}>
               <TouchableOpacity
                 style={styles.drawerProfileRow}
@@ -963,14 +948,14 @@ export default function HomeScreen({ navigation }: Props) {
                   <Text style={styles.profileName}>Deepak • Team Griffins</Text>
                   <Text style={styles.profileSub}>Bhashini & Gemini 2.5</Text>
                 </View>
-                <Ionicons name="settings-outline" size={18} color="#A3A39A" />
+                <Ionicons name="settings-outline" size={18} color="#D4AF37" />
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* ── CLAUDE VOICE-TO-VOICE MODE ── */}
+      {/* ── BLACK & GOLD VOICE-TO-VOICE MODE ── */}
       <Modal
         visible={isVoiceModeActive}
         transparent={false}
@@ -995,7 +980,7 @@ export default function HomeScreen({ navigation }: Props) {
                 stopListening();
               }}
             >
-              <Ionicons name="close" size={24} color="#F5F5F0" />
+              <Ionicons name="close" size={24} color="#FFFDF7" />
             </TouchableOpacity>
           </View>
 
@@ -1004,13 +989,13 @@ export default function HomeScreen({ navigation }: Props) {
               style={[
                 styles.glowingOrbOuter,
                 { transform: [{ scale: voiceOrbAnim }] },
-                voiceModeStatus === "speaking" && { backgroundColor: "rgba(217, 119, 6, 0.2)" },
+                voiceModeStatus === "speaking" && { backgroundColor: "rgba(212, 175, 55, 0.25)" },
               ]}
             />
             <Animated.View
               style={[
                 styles.glowingOrbInner,
-                voiceModeStatus === "speaking" && { backgroundColor: "#D97706" },
+                voiceModeStatus === "speaking" && { backgroundColor: "#D4AF37" },
                 voiceModeStatus === "thinking" && { backgroundColor: "#F59E0B" },
               ]}
             >
@@ -1023,7 +1008,7 @@ export default function HomeScreen({ navigation }: Props) {
                     : "mic"
                 }
                 size={44}
-                color="#1F1E1D"
+                color="#09090B"
               />
             </Animated.View>
 
@@ -1050,7 +1035,7 @@ export default function HomeScreen({ navigation }: Props) {
               <Ionicons
                 name={isListening ? "pause" : "mic"}
                 size={24}
-                color="#D97706"
+                color="#D4AF37"
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -1060,7 +1045,7 @@ export default function HomeScreen({ navigation }: Props) {
                 stopListening();
               }}
             >
-              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#F5F5F0" />
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#09090B" />
               <Text style={styles.exitText}>Text Chat</Text>
             </TouchableOpacity>
           </View>
@@ -1073,7 +1058,7 @@ export default function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#181716", // Claude iconic warm dark
+    backgroundColor: "#09090B", // Pure Obsidian Black
   },
   header: {
     flexDirection: "row",
@@ -1081,9 +1066,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 14,
     paddingBottom: 10,
-    backgroundColor: "#181716",
+    backgroundColor: "#09090B",
     borderBottomWidth: 1,
-    borderBottomColor: "#262522",
+    borderBottomColor: "rgba(212, 175, 55, 0.15)",
   },
   headerLeft: {
     flexDirection: "row",
@@ -1094,26 +1079,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#22211F",
+    backgroundColor: "#141416",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#2D2C28",
+    borderColor: "rgba(212, 175, 55, 0.25)",
   },
   modelNameText: {
-    color: "#F5F5F0",
+    color: "#FFFDF7",
     fontSize: 13,
     fontWeight: "600",
   },
   modelBadge: {
-    backgroundColor: "rgba(217, 119, 6, 0.15)",
+    backgroundColor: "rgba(212, 175, 55, 0.2)",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.4)",
   },
   modelBadgeText: {
-    color: "#D97706",
+    color: "#D4AF37",
     fontSize: 10,
     fontWeight: "700",
   },
@@ -1125,15 +1112,17 @@ const styles = StyleSheet.create({
   headerIconBtn: {
     padding: 7,
     borderRadius: 8,
-    backgroundColor: "#22211F",
+    backgroundColor: "#141416",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.2)",
   },
   voiceModeHeaderBtn: {
-    backgroundColor: "rgba(217, 119, 6, 0.12)",
-    borderColor: "rgba(217, 119, 6, 0.3)",
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
+    borderColor: "rgba(212, 175, 55, 0.4)",
     borderWidth: 1,
   },
 
-  /* ── Hero Landing Canvas (Claude Style) ── */
+  /* ── Hero Landing Canvas (Black & Gold) ── */
   heroScroll: {
     flex: 1,
   },
@@ -1148,24 +1137,26 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     maxWidth: 480,
   },
-  claudeSparkIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(217, 119, 6, 0.15)",
+  goldSparkIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "rgba(212, 175, 55, 0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.35)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 14,
   },
   heroTitle: {
-    color: "#F5F5F0",
+    color: "#FFFDF7",
     fontSize: 26,
-    fontWeight: "600",
+    fontWeight: "700",
     letterSpacing: -0.5,
     marginBottom: 8,
   },
   heroSubtitle: {
-    color: "#A3A39A",
+    color: "#A1A1AA",
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
@@ -1180,9 +1171,9 @@ const styles = StyleSheet.create({
   promptCard: {
     flexBasis: "48%",
     flexGrow: 1,
-    backgroundColor: "#22211F",
+    backgroundColor: "#141416",
     borderWidth: 1,
-    borderColor: "#2D2C28",
+    borderColor: "rgba(212, 175, 55, 0.22)",
     borderRadius: 12,
     padding: 14,
     gap: 6,
@@ -1191,12 +1182,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   cardTitle: {
-    color: "#F5F5F0",
+    color: "#FFFDF7",
     fontSize: 13.5,
     fontWeight: "600",
   },
   cardSubtitle: {
-    color: "#787774",
+    color: "#71717A",
     fontSize: 11.5,
     lineHeight: 16,
   },
@@ -1222,11 +1213,13 @@ const styles = StyleSheet.create({
   messageRowAssistant: {
     justifyContent: "flex-start",
   },
-  claudeAvatar: {
+  goldAvatar: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "rgba(217, 119, 6, 0.15)",
+    backgroundColor: "rgba(212, 175, 55, 0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.4)",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 2,
@@ -1238,18 +1231,20 @@ const styles = StyleSheet.create({
     maxWidth: "88%",
   },
   bubbleUser: {
-    backgroundColor: "#2D2C28",
+    backgroundColor: "#1C1C20",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.3)",
     borderBottomRightRadius: 4,
   },
   bubbleAssistant: {
-    backgroundColor: "#22211F",
+    backgroundColor: "#141416",
     borderWidth: 1,
-    borderColor: "#2D2C28",
+    borderColor: "rgba(212, 175, 55, 0.2)",
     borderBottomLeftRadius: 4,
   },
   textUser: {
     fontSize: 14.5,
-    color: "#F5F5F0",
+    color: "#FFFDF7",
     lineHeight: 22,
   },
   textAssistant: {
@@ -1265,20 +1260,22 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.06)",
+    borderTopColor: "rgba(212, 175, 55, 0.12)",
   },
   metricItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#181716",
+    backgroundColor: "#09090B",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.15)",
   },
   metricLabel: {
     fontSize: 11.5,
-    color: "#D4D4D0",
+    color: "#D4AF37",
     fontWeight: "600",
   },
   riskPill: {
@@ -1311,30 +1308,30 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 13,
-    color: "#A3A39A",
+    color: "#D4AF37",
     fontStyle: "italic",
   },
 
-  /* ── Claude Elevated Input Box ── */
+  /* ── Black & Gold Elevated Input Box ── */
   inputContainer: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    backgroundColor: "#181716",
+    backgroundColor: "#09090B",
   },
-  claudeInputBox: {
-    backgroundColor: "#22211F",
+  goldInputBox: {
+    backgroundColor: "#141416",
     borderWidth: 1,
-    borderColor: "#33322E",
+    borderColor: "rgba(212, 175, 55, 0.3)",
     borderRadius: 16,
     padding: 12,
     gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    shadowColor: "#D4AF37",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
   textInput: {
-    color: "#F5F5F0",
+    color: "#FFFDF7",
     fontSize: 14.5,
     minHeight: 38,
     maxHeight: 120,
@@ -1355,7 +1352,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: "#2D2C28",
+    backgroundColor: "#1C1C20",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.25)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1363,15 +1362,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#EF4444",
   },
   dockPill: {
-    backgroundColor: "#2D2C28",
+    backgroundColor: "#1C1C20",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.25)",
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 6,
   },
   dockPillText: {
-    color: "#A3A39A",
+    color: "#D4AF37",
     fontSize: 11,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   sendBtn: {
     width: 32,
@@ -1381,20 +1382,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  /* ── Claude Drawer ── */
+  /* ── Black & Gold Drawer ── */
   modalOverlay: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
   },
   modalBackdrop: {
     flex: 1,
   },
   drawerContainer: {
     width: Math.min(300, SCREEN_WIDTH * 0.8),
-    backgroundColor: "#1F1E1D",
+    backgroundColor: "#0D0D10",
     borderRightWidth: 1,
-    borderRightColor: "#2D2C28",
+    borderRightColor: "rgba(212, 175, 55, 0.25)",
     padding: 16,
     paddingTop: 46,
     justifyContent: "space-between",
@@ -1414,14 +1415,14 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 6,
-    backgroundColor: "rgba(217, 119, 6, 0.2)",
+    backgroundColor: "#D4AF37",
     alignItems: "center",
     justifyContent: "center",
   },
   drawerBrandText: {
-    color: "#F5F5F0",
+    color: "#FFFDF7",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   drawerCloseBtn: {
     padding: 4,
@@ -1430,23 +1431,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#2A2926",
-    borderWidth: 1,
-    borderColor: "#363531",
+    backgroundColor: "#D4AF37",
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
     marginBottom: 18,
   },
   newChatBtnText: {
-    color: "#F5F5F0",
+    color: "#09090B",
     fontSize: 13.5,
-    fontWeight: "500",
+    fontWeight: "700",
   },
   drawerSectionTitle: {
-    color: "#787774",
+    color: "#D4AF37",
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
     marginBottom: 8,
   },
   sessionsList: {
@@ -1462,15 +1463,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sessionItemActive: {
-    backgroundColor: "#2B2A27",
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.3)",
   },
   sessionTitle: {
-    color: "#A3A39A",
+    color: "#A1A1AA",
     fontSize: 13,
     flex: 1,
   },
   sessionTitleActive: {
-    color: "#F5F5F0",
+    color: "#FFFDF7",
     fontWeight: "600",
   },
   sessionDeleteBtn: {
@@ -1479,7 +1482,7 @@ const styles = StyleSheet.create({
   drawerFooter: {
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: "#2D2C28",
+    borderTopColor: "rgba(212, 175, 55, 0.18)",
   },
   drawerProfileRow: {
     flexDirection: "row",
@@ -1490,29 +1493,29 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#D97706",
+    backgroundColor: "#D4AF37",
     alignItems: "center",
     justifyContent: "center",
   },
   profileAvatarText: {
-    color: "#FFFFFF",
+    color: "#09090B",
     fontWeight: "700",
     fontSize: 13,
   },
   profileName: {
-    color: "#F5F5F0",
+    color: "#FFFDF7",
     fontSize: 12.5,
     fontWeight: "600",
   },
   profileSub: {
-    color: "#787774",
+    color: "#D4AF37",
     fontSize: 10.5,
   },
 
-  /* ── Voice Mode ── */
+  /* ── Black & Gold Voice Mode ── */
   voiceModeContainer: {
     flex: 1,
-    backgroundColor: "#181716",
+    backgroundColor: "#09090B",
     justifyContent: "space-between",
     paddingHorizontal: 20,
   },
@@ -1522,12 +1525,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   voiceModeTitle: {
-    color: "#F5F5F0",
-    fontSize: 17,
-    fontWeight: "600",
+    color: "#FFFDF7",
+    fontSize: 18,
+    fontWeight: "700",
   },
   voiceModeLang: {
-    color: "#D97706",
+    color: "#D4AF37",
     fontSize: 12,
     fontWeight: "600",
   },
@@ -1543,27 +1546,31 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: "rgba(217, 119, 6, 0.12)",
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
   },
   glowingOrbInner: {
     width: 110,
     height: 110,
     borderRadius: 55,
-    backgroundColor: "#D97706",
+    backgroundColor: "#D4AF37",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
+    shadowColor: "#D4AF37",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
   },
   orbStatusText: {
-    color: "#D4D4D0",
+    color: "#FFFDF7",
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: "600",
     textAlign: "center",
   },
   voiceTranscriptCard: {
-    backgroundColor: "#22211F",
+    backgroundColor: "#141416",
     borderWidth: 1,
-    borderColor: "#2D2C28",
+    borderColor: "rgba(212, 175, 55, 0.3)",
     borderRadius: 12,
     padding: 14,
     marginTop: 18,
@@ -1584,21 +1591,22 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#22211F",
+    backgroundColor: "#141416",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#33322E",
+    borderColor: "rgba(212, 175, 55, 0.3)",
   },
   voiceModeExitBtn: {
-    backgroundColor: "#2D2C28",
+    backgroundColor: "#D4AF37",
     flexDirection: "row",
     gap: 6,
     width: 110,
+    borderWidth: 0,
   },
   exitText: {
-    color: "#F5F5F0",
+    color: "#09090B",
     fontSize: 12.5,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });

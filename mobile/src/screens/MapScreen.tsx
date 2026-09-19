@@ -1,5 +1,6 @@
 /**
  * Screen 7 — Unified Scientific & Educational GIS Map Screen
+ * Luxury Black & Gold Theme (#09090B + #D4AF37)
  * Displays:
  * 1. Multi-Layer Selector: Rain Radar (Doppler), Heatmap, Wind Vectors, Hazards
  * 2. Scientific Radar Reflectivity (dBZ) scale & IMD 4-Color Warning Protocol
@@ -52,7 +53,7 @@ export default function MapScreen({ navigation, route }: Props) {
       {/* ── Top Header with Multi-Layer Selector ── */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) + 8 }]}>
         <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={20} color="#F1F5F9" />
+          <Ionicons name="arrow-back" size={20} color="#D4AF37" />
         </TouchableOpacity>
 
         {/* Layer Selector Chips */}
@@ -71,7 +72,7 @@ export default function MapScreen({ navigation, route }: Props) {
             <Ionicons
               name="rainy"
               size={13}
-              color={mode === "radar" ? "#0F172A" : "#94A3B8"}
+              color={mode === "radar" ? "#09090B" : "#A1A1AA"}
             />
             <Text
               style={[styles.layerChipText, mode === "radar" && styles.layerChipTextActive]}
@@ -90,7 +91,7 @@ export default function MapScreen({ navigation, route }: Props) {
             <Ionicons
               name="thermometer"
               size={13}
-              color={mode === "temp" ? "#0F172A" : "#94A3B8"}
+              color={mode === "temp" ? "#09090B" : "#A1A1AA"}
             />
             <Text
               style={[styles.layerChipText, mode === "temp" && styles.layerChipTextActive]}
@@ -106,13 +107,13 @@ export default function MapScreen({ navigation, route }: Props) {
             <Ionicons
               name="school"
               size={13}
-              color={isEducationOpen ? "#0F172A" : "#38BDF8"}
+              color={isEducationOpen ? "#09090B" : "#D4AF37"}
             />
             <Text
               style={[
                 styles.layerChipText,
                 isEducationOpen && styles.layerChipTextActive,
-                !isEducationOpen && { color: "#38BDF8" },
+                !isEducationOpen && { color: "#D4AF37" },
               ]}
             >
               Research & Education
@@ -135,10 +136,10 @@ export default function MapScreen({ navigation, route }: Props) {
           <View style={styles.inspectHeader}>
             <View>
               <Text style={styles.inspectTitle}>Station Observation</Text>
-              <Text style={styles.inspectSource}>{selectedPoint.source || "IMD AWS Network"}</Text>
+              <Text style={styles.inspectSource}>{selectedPoint.source || "IMD AWS Ground Network"}</Text>
             </View>
             <TouchableOpacity onPress={() => setSelectedPoint(null)}>
-              <Ionicons name="close-circle" size={22} color="#64748B" />
+              <Ionicons name="close-circle" size={22} color="#71717A" />
             </TouchableOpacity>
           </View>
 
@@ -152,7 +153,7 @@ export default function MapScreen({ navigation, route }: Props) {
               <Text
                 style={[
                   styles.inspectVal,
-                  selectedPoint.anomaly_c > 0 ? { color: "#F87171" } : { color: "#60A5FA" },
+                  selectedPoint.anomaly_c > 0 ? { color: "#F87171" } : { color: "#D4AF37" },
                 ]}
               >
                 {selectedPoint.anomaly_c > 0 ? `+${selectedPoint.anomaly_c}` : selectedPoint.anomaly_c}°C
@@ -167,11 +168,11 @@ export default function MapScreen({ navigation, route }: Props) {
         <View style={[styles.educationPanel, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
           <View style={styles.eduHeader}>
             <View style={styles.eduTitleRow}>
-              <Ionicons name="school" size={18} color="#38BDF8" />
+              <Ionicons name="school" size={18} color="#D4AF37" />
               <Text style={styles.eduTitle}>Meteorological Science & Education</Text>
             </View>
             <TouchableOpacity onPress={() => setIsEducationOpen(false)}>
-              <Ionicons name="close" size={20} color="#94A3B8" />
+              <Ionicons name="close" size={20} color="#D4AF37" />
             </TouchableOpacity>
           </View>
 
@@ -269,7 +270,7 @@ export default function MapScreen({ navigation, route }: Props) {
                 </View>
 
                 <TouchableOpacity style={styles.exportBtn} onPress={handleExportData}>
-                  <Ionicons name="download-outline" size={16} color="#0F172A" />
+                  <Ionicons name="download-outline" size={16} color="#09090B" />
                   <Text style={styles.exportBtnText}>Export Research Dataset (CSV / GeoJSON)</Text>
                 </TouchableOpacity>
               </View>
@@ -282,22 +283,24 @@ export default function MapScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0F172A" },
+  container: { flex: 1, backgroundColor: "#09090B" },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
     paddingBottom: 10,
-    backgroundColor: "#0F172A",
+    backgroundColor: "#141416",
     borderBottomWidth: 1,
-    borderBottomColor: "#1E293B",
+    borderBottomColor: "rgba(212, 175, 55, 0.15)",
     gap: 8,
   },
   iconBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: "#1E293B",
+    borderRadius: 12,
+    backgroundColor: "#1C1C20",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.25)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -309,30 +312,30 @@ const styles = StyleSheet.create({
   layerChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: "#1E293B",
+    gap: 6,
+    backgroundColor: "#1C1C20",
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.2)",
   },
   layerChipActive: {
-    backgroundColor: "#38BDF8",
-    borderColor: "#38BDF8",
+    backgroundColor: "#D4AF37",
+    borderColor: "#D4AF37",
   },
   layerChipActiveEdu: {
-    backgroundColor: "#38BDF8",
-    borderColor: "#38BDF8",
+    backgroundColor: "#D4AF37",
+    borderColor: "#D4AF37",
   },
   layerChipText: {
-    color: "#94A3B8",
+    color: "#A1A1AA",
     fontSize: 12,
     fontWeight: "600",
   },
   layerChipTextActive: {
-    color: "#0F172A",
-    fontWeight: "700",
+    color: "#09090B",
+    fontWeight: "800",
   },
   mapContainer: {
     flex: 1,
@@ -341,12 +344,11 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 14,
     right: 14,
-    backgroundColor: "rgba(15, 23, 42, 0.95)",
-    backdropFilter: "blur(12px)",
+    backgroundColor: "rgba(20, 20, 22, 0.95)",
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: "rgba(56, 189, 248, 0.3)",
+    borderColor: "rgba(212, 175, 55, 0.3)",
     gap: 10,
   },
   inspectHeader: {
@@ -354,15 +356,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  inspectTitle: { color: "#F8FAFC", fontSize: 14, fontWeight: "700" },
-  inspectSource: { color: "#60A5FA", fontSize: 11 },
+  inspectTitle: { color: "#FFFDF7", fontSize: 14, fontWeight: "700" },
+  inspectSource: { color: "#D4AF37", fontSize: 11 },
   inspectStats: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   inspectItem: { gap: 2 },
-  inspectLabel: { color: "#94A3B8", fontSize: 11 },
-  inspectVal: { color: "#F8FAFC", fontSize: 15, fontWeight: "700" },
+  inspectLabel: { color: "#71717A", fontSize: 11 },
+  inspectVal: { color: "#FFFDF7", fontSize: 15, fontWeight: "700" },
 
   /* ── Educational Drawer ── */
   educationPanel: {
@@ -370,12 +372,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(15, 23, 42, 0.96)",
-    backdropFilter: "blur(16px)",
+    backgroundColor: "rgba(20, 20, 22, 0.98)",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderTopWidth: 1,
-    borderTopColor: "rgba(56, 189, 248, 0.3)",
+    borderTopColor: "rgba(212, 175, 55, 0.3)",
     padding: 16,
     maxHeight: 320,
   },
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   eduTitle: {
-    color: "#F8FAFC",
+    color: "#FFFDF7",
     fontSize: 14,
     fontWeight: "700",
   },
@@ -404,22 +405,22 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 6,
     alignItems: "center",
-    backgroundColor: "#1E293B",
+    backgroundColor: "#1C1C20",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "#27272A",
   },
   eduTabActive: {
-    backgroundColor: "rgba(56, 189, 248, 0.15)",
-    borderColor: "#38BDF8",
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
+    borderColor: "#D4AF37",
   },
   eduTabText: {
-    color: "#94A3B8",
+    color: "#71717A",
     fontSize: 11,
     fontWeight: "600",
   },
   eduTabTextActive: {
-    color: "#38BDF8",
+    color: "#D4AF37",
     fontWeight: "700",
   },
   eduScroll: {
@@ -429,13 +430,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   eduDesc: {
-    color: "#CBD5E1",
+    color: "#A1A1AA",
     fontSize: 12,
     lineHeight: 17,
     marginBottom: 6,
   },
   highlight: {
-    color: "#38BDF8",
+    color: "#D4AF37",
     fontWeight: "700",
   },
   scaleItem: {
@@ -449,23 +450,25 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   scaleLabel: {
-    color: "#E2E8F0",
+    color: "#FFFDF7",
     fontSize: 11.5,
   },
   telemetryCard: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#1C1C20",
     padding: 10,
     borderRadius: 10,
     gap: 4,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.15)",
   },
   telemetryTitle: {
-    color: "#38BDF8",
+    color: "#D4AF37",
     fontSize: 11.5,
     fontWeight: "700",
   },
   telemetryLine: {
-    color: "#CBD5E1",
+    color: "#E4E4E7",
     fontSize: 11,
   },
   exportBtn: {
@@ -473,14 +476,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    backgroundColor: "#38BDF8",
+    backgroundColor: "#D4AF37",
     paddingVertical: 9,
     borderRadius: 8,
     marginTop: 4,
   },
   exportBtnText: {
-    color: "#0F172A",
+    color: "#09090B",
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 });

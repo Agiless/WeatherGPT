@@ -1,5 +1,6 @@
 /**
  * Screen 9 — Profile & Settings
+ * Luxury Black & Gold Theme (#09090B + #D4AF37)
  * Allows switching persona (Farmer -> Researcher), language, units, and clearing cache.
  */
 
@@ -13,14 +14,14 @@ import { updateProfile } from "../api/client";
 type Props = { navigation: any };
 
 const PERSONAS = [
-  { id: "farmer", label: "Farmer", color: "#22C55E" },
-  { id: "fisherman", label: "Fisherman", color: "#06B6D4" },
-  { id: "logistics", label: "Logistics", color: "#8B5CF6" },
-  { id: "traveller", label: "Traveller", color: "#F59E0B" },
-  { id: "generic", label: "General", color: "#60A5FA" },
-  { id: "researcher_scientist", label: "Researcher / Met", color: "#EC4899" },
+  { id: "farmer", label: "Farmer", color: "#D4AF37" },
+  { id: "fisherman", label: "Fisherman", color: "#38BDF8" },
+  { id: "logistics", label: "Logistics", color: "#F59E0B" },
+  { id: "traveller", label: "Traveller", color: "#E2E8F0" },
+  { id: "generic", label: "General", color: "#A1A1AA" },
+  { id: "researcher_scientist", label: "Researcher / Met", color: "#D4AF37" },
   { id: "disaster_manager_govt", label: "Disaster Mgr", color: "#EF4444" },
-  { id: "aviation", label: "Aviation", color: "#14B8A6" },
+  { id: "aviation", label: "Aviation", color: "#34D399" },
 ];
 
 export default function SettingsScreen({ navigation }: Props) {
@@ -52,9 +53,12 @@ export default function SettingsScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
         <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color="#F1F5F9" />
+          <Ionicons name="arrow-back" size={20} color="#D4AF37" />
         </TouchableOpacity>
-        <Text style={styles.title}>Settings & Profile</Text>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.title}>Settings & Profile</Text>
+          <Text style={styles.subtitle}>Preferences & Configuration</Text>
+        </View>
         <View style={{ width: 38 }} />
       </View>
 
@@ -68,50 +72,55 @@ export default function SettingsScreen({ navigation }: Props) {
       >
         <Text style={styles.sectionHeader}>Switch Persona</Text>
         <View style={styles.personaGrid}>
-          {PERSONAS.map((p) => (
-            <TouchableOpacity
-              key={p.id}
-              style={[
-                styles.personaBtn,
-                activePersona === p.id && { borderColor: p.color, backgroundColor: `${p.color}15` },
-              ]}
-              onPress={() => handleSelectPersona(p.id)}
-            >
-              <Text
+          {PERSONAS.map((p) => {
+            const isSelected = activePersona === p.id;
+            return (
+              <TouchableOpacity
+                key={p.id}
                 style={[
-                  styles.personaBtnText,
-                  activePersona === p.id && { color: p.color, fontWeight: "700" },
+                  styles.personaBtn,
+                  isSelected && styles.personaBtnActive,
                 ]}
+                onPress={() => handleSelectPersona(p.id)}
               >
-                {p.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.personaBtnText,
+                    isSelected && styles.personaBtnTextActive,
+                  ]}
+                >
+                  {p.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        <Text style={styles.sectionHeader}>Preferences</Text>
+        <Text style={styles.sectionHeader}>System Preferences</Text>
         <View style={styles.settingCard}>
           <View style={styles.settingRow}>
-            <View>
+            <View style={{ flex: 1, paddingRight: 12 }}>
               <Text style={styles.settingLabel}>Voice-First Audio Output</Text>
-              <Text style={styles.settingSub}>Auto-read forecasts aloud</Text>
+              <Text style={styles.settingSub}>Auto-read forecasts aloud via neural TTS</Text>
             </View>
             <Switch
               value={voiceDefault}
               onValueChange={setVoiceDefault}
-              trackColor={{ false: "#334155", true: "#60A5FA" }}
+              trackColor={{ false: "#27272A", true: "#D4AF37" }}
+              thumbColor={voiceDefault ? "#09090B" : "#71717A"}
             />
           </View>
           <View style={styles.divider} />
           <View style={styles.settingRow}>
-            <View>
+            <View style={{ flex: 1, paddingRight: 12 }}>
               <Text style={styles.settingLabel}>Metric Units (°C, mm/h, km/h)</Text>
               <Text style={styles.settingSub}>Standard SI meteorological format</Text>
             </View>
             <Switch
               value={metricUnits}
               onValueChange={setMetricUnits}
-              trackColor={{ false: "#334155", true: "#60A5FA" }}
+              trackColor={{ false: "#27272A", true: "#D4AF37" }}
+              thumbColor={metricUnits ? "#09090B" : "#71717A"}
             />
           </View>
         </View>
@@ -121,23 +130,38 @@ export default function SettingsScreen({ navigation }: Props) {
           style={styles.actionRow}
           onPress={() => navigation.navigate("OfflineFallback")}
         >
-          <Ionicons name="chatbox-ellipses-outline" size={20} color="#F59E0B" />
-          <Text style={styles.actionRowText}>SMS / Low-Bandwidth Preview</Text>
-          <Ionicons name="chevron-forward" size={18} color="#64748B" />
+          <View style={styles.actionIconBox}>
+            <Ionicons name="chatbox-ellipses-outline" size={18} color="#D4AF37" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.actionRowText}>SMS / Low-Bandwidth Preview</Text>
+            <Text style={styles.actionRowSub}>Offline GSM 7-bit weather alerts</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#71717A" />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.actionRow}
           onPress={() => navigation.navigate("History")}
         >
-          <Ionicons name="time-outline" size={20} color="#60A5FA" />
-          <Text style={styles.actionRowText}>Query History</Text>
-          <Ionicons name="chevron-forward" size={18} color="#64748B" />
+          <View style={styles.actionIconBox}>
+            <Ionicons name="time-outline" size={18} color="#D4AF37" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.actionRowText}>Query History</Text>
+            <Text style={styles.actionRowSub}>Review previous weather advisories</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#71717A" />
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.actionRow, { marginTop: 12 }]} onPress={handleClearCache}>
-          <Ionicons name="trash-outline" size={20} color="#EF4444" />
-          <Text style={[styles.actionRowText, { color: "#EF4444" }]}>Clear Cached Forecasts</Text>
+          <View style={[styles.actionIconBox, { backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)" }]}>
+            <Ionicons name="trash-outline" size={18} color="#EF4444" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.actionRowText, { color: "#EF4444" }]}>Clear Cached Forecasts</Text>
+            <Text style={styles.actionRowSub}>Free up local storage & session state</Text>
+          </View>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -145,35 +169,41 @@ export default function SettingsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0F172A" },
+  container: { flex: 1, backgroundColor: "#09090B" },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 52,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1E293B",
+    borderBottomColor: "rgba(212, 175, 55, 0.15)",
+    backgroundColor: "#141416",
+  },
+  headerTitleContainer: {
+    alignItems: "center",
   },
   iconBtn: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: "#1E293B",
+    borderRadius: 12,
+    backgroundColor: "#1C1C20",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.25)",
     justifyContent: "center",
     alignItems: "center",
   },
-  title: { fontSize: 18, fontWeight: "700", color: "#F1F5F9" },
+  title: { fontSize: 17, fontWeight: "700", color: "#FFFDF7", letterSpacing: 0.3 },
+  subtitle: { fontSize: 11, color: "#D4AF37", letterSpacing: 0.5, marginTop: 1 },
   scroll: { flex: 1 },
   scrollInner: { padding: 20 },
   sectionHeader: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#64748B",
+    color: "#D4AF37",
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginTop: 16,
+    letterSpacing: 1.2,
+    marginTop: 18,
     marginBottom: 12,
   },
   personaGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 12 },
@@ -181,33 +211,49 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 12,
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "#27272A",
   },
-  personaBtnText: { color: "#CBD5E1", fontSize: 13, fontWeight: "500" },
+  personaBtnActive: {
+    borderColor: "#D4AF37",
+    backgroundColor: "rgba(212, 175, 55, 0.12)",
+  },
+  personaBtnText: { color: "#A1A1AA", fontSize: 13, fontWeight: "500" },
+  personaBtnTextActive: { color: "#D4AF37", fontWeight: "700" },
   settingCard: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.15)",
     marginBottom: 16,
   },
   settingRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  settingLabel: { color: "#F1F5F9", fontSize: 14, fontWeight: "600" },
-  settingSub: { color: "#64748B", fontSize: 12, marginTop: 2 },
-  divider: { height: 1, backgroundColor: "#334155", marginVertical: 14 },
+  settingLabel: { color: "#FFFDF7", fontSize: 14, fontWeight: "600" },
+  settingSub: { color: "#71717A", fontSize: 12, marginTop: 2 },
+  divider: { height: 1, backgroundColor: "#27272A", marginVertical: 14 },
   actionRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 14,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.15)",
     gap: 12,
     marginBottom: 10,
   },
-  actionRowText: { flex: 1, color: "#F1F5F9", fontSize: 14, fontWeight: "500" },
+  actionIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "rgba(212, 175, 55, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  actionRowText: { color: "#FFFDF7", fontSize: 14, fontWeight: "600" },
+  actionRowSub: { color: "#71717A", fontSize: 11, marginTop: 1 },
 });

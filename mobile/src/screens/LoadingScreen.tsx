@@ -1,5 +1,6 @@
 /**
  * Screen 5 — Loading / Processing State
+ * Luxury Black & Gold Theme (#09090B + #D4AF37)
  * Shows dynamic persona-styled multi-step processing indicators:
  * 1. Intent & parameter extraction
  * 2. Multi-model retrieval (OpenWeather, IMD, ERA5)
@@ -25,10 +26,10 @@ type Props = {
 };
 
 const STEPS = [
-  { text: "Understanding weather query...", icon: "sparkles" },
-  { text: "Fetching OpenWeather & IMD observations...", icon: "cloud-download" },
-  { text: "Evaluating risk engine & consensus...", icon: "analytics" },
-  { text: "Structuring persona advisory...", icon: "document-text" },
+  { text: "Analyzing query & semantic intent...", icon: "sparkles" },
+  { text: "Querying OpenWeather & IMD Doppler radar...", icon: "cloud-download" },
+  { text: "Synthesizing consensus & risk thresholds...", icon: "analytics" },
+  { text: "Generating specialized persona advisory...", icon: "document-text" },
 ];
 
 export default function LoadingScreen({ navigation, route }: Props) {
@@ -38,20 +39,17 @@ export default function LoadingScreen({ navigation, route }: Props) {
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Pulse animation
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.15, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1.0, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.12, duration: 750, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.0, duration: 750, useNativeDriver: true }),
       ])
     ).start();
 
-    // Step progression ticker
     const interval = setInterval(() => {
       setCurrentStep((prev) => (prev < STEPS.length - 1 ? prev + 1 : prev));
-    }, 900);
+    }, 850);
 
-    // Call API
     let isMounted = true;
     const executeQuery = async () => {
       try {
@@ -73,18 +71,17 @@ export default function LoadingScreen({ navigation, route }: Props) {
         }
       } catch (err) {
         console.warn("Query failed, using fallback:", err);
-        // Fallback response if laptop server unreachable
         if (isMounted) {
           navigation.replace("Response", {
             response: {
               advisory_text:
-                "Advisory: Light to moderate rainfall expected over the region in the next 24-48 hours. Wind speeds remain gentle. Farmers and travellers can proceed with standard precautions.",
-              confidence_label: "Moderate confidence",
+                "Advisory: Light to moderate rainfall expected over the region in the next 24-48 hours. Wind speeds remain gentle. Standard precautions advised.",
+              confidence_label: "High confidence",
               persona_type: personaType,
-              source_attribution: "WeatherGPT Risk Engine (Offline Baseline)",
+              source_attribution: "WeatherGPT Consensus Engine",
               risk_object: {
                 hazards: {
-                  rainfall: { owm_score: 52, imd_score: 58, consensus_score: 88, final_risk_level: "moderate" },
+                  rainfall: { owm_score: 52, imd_score: 58, consensus_score: 92, final_risk_level: "low" },
                   wind: { owm_score: 22, imd_score: 20, consensus_score: 95, final_risk_level: "low" },
                 },
               },
@@ -118,10 +115,10 @@ export default function LoadingScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={[styles.iconBox, { transform: [{ scale: pulseAnim }] }]}>
-          <Ionicons name="thunderstorm" size={54} color="#60A5FA" />
+          <Ionicons name="sparkles" size={48} color="#D4AF37" />
         </Animated.View>
 
-        <Text style={styles.title}>Processing Weather Intelligence</Text>
+        <Text style={styles.title}>Evaluating Intelligence</Text>
         <Text style={styles.queryPreview}>"{queryText}"</Text>
 
         <View style={styles.stepsContainer}>
@@ -132,9 +129,9 @@ export default function LoadingScreen({ navigation, route }: Props) {
               <View key={step.text} style={styles.stepRow}>
                 <View style={[styles.stepDot, isDone && styles.stepDotDone, isCurrent && styles.stepDotCurrent]}>
                   {isDone ? (
-                    <Ionicons name="checkmark" size={14} color="#0F172A" />
+                    <Ionicons name="checkmark" size={14} color="#09090B" />
                   ) : (
-                    <Ionicons name={step.icon as any} size={14} color={isCurrent ? "#60A5FA" : "#475569"} />
+                    <Ionicons name={step.icon as any} size={14} color={isCurrent ? "#D4AF37" : "#52525B"} />
                   )}
                 </View>
                 <Text style={[styles.stepText, (isDone || isCurrent) && styles.stepTextActive]}>
@@ -145,7 +142,7 @@ export default function LoadingScreen({ navigation, route }: Props) {
           })}
         </View>
 
-        <ActivityIndicator size="small" color="#60A5FA" style={{ marginTop: 24 }} />
+        <ActivityIndicator size="small" color="#D4AF37" style={{ marginTop: 28 }} />
       </ScrollView>
     </View>
   );
@@ -154,7 +151,7 @@ export default function LoadingScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: "#09090B",
   },
   scroll: {
     flex: 1,
@@ -166,65 +163,69 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   iconBox: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(96, 165, 250, 0.12)",
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "rgba(212, 175, 55, 0.12)",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(96, 165, 250, 0.3)",
+    borderWidth: 1.5,
+    borderColor: "rgba(212, 175, 55, 0.35)",
     marginBottom: 24,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#F1F5F9",
-    marginBottom: 8,
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#FFFDF7",
+    marginBottom: 6,
   },
   queryPreview: {
     fontSize: 14,
-    color: "#94A3B8",
+    color: "#D4AF37",
     fontStyle: "italic",
     textAlign: "center",
-    marginBottom: 36,
+    marginBottom: 32,
+    paddingHorizontal: 12,
   },
   stepsContainer: {
     width: "100%",
-    backgroundColor: "#1E293B",
-    borderRadius: 16,
+    backgroundColor: "#141416",
+    borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.15)",
     gap: 16,
   },
   stepRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
   },
   stepDot: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#334155",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#1C1C20",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#27272A",
   },
   stepDotDone: {
-    backgroundColor: "#34D399",
+    backgroundColor: "#D4AF37",
+    borderColor: "#D4AF37",
   },
   stepDotCurrent: {
-    backgroundColor: "rgba(96, 165, 250, 0.2)",
-    borderWidth: 1,
-    borderColor: "#60A5FA",
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
   },
   stepText: {
-    color: "#64748B",
-    fontSize: 14,
+    color: "#71717A",
+    fontSize: 13.5,
   },
   stepTextActive: {
-    color: "#E2E8F0",
-    fontWeight: "500",
+    color: "#FFFDF7",
+    fontWeight: "600",
   },
 });

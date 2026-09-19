@@ -18,18 +18,18 @@ import HistoryScreen from "../screens/HistoryScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import OfflineFallbackScreen from "../screens/OfflineFallbackScreen";
 
-// Dark theme matching the app's premium aesthetic
+// Luxury Black & Gold theme matching the user's design direction
 const WeatherGPTTheme = {
   ...DefaultTheme,
   dark: true,
   colors: {
     ...DefaultTheme.colors,
-    primary: "#60A5FA",       // Blue-400
-    background: "#0F172A",    // Slate-900
-    card: "#1E293B",          // Slate-800
-    text: "#F1F5F9",          // Slate-100
-    border: "#334155",        // Slate-700
-    notification: "#F59E0B",  // Amber-500
+    primary: "#D4AF37",       // Luxury Metallic Gold
+    background: "#09090B",    // Pure Obsidian Black
+    card: "#141416",          // Elevated Obsidian Card
+    text: "#FDFBF7",          // Warm Off-White
+    border: "rgba(212, 175, 55, 0.25)", // Subtle Gold Border
+    notification: "#F59E0B",  // Gold Amber
   },
 };
 
@@ -56,11 +56,11 @@ export default function AppNavigator() {
   return (
     <NavigationContainer theme={WeatherGPTTheme}>
       <Stack.Navigator
-        initialRouteName="Splash"
+        initialRouteName="Home"
         screenOptions={{
           headerShown: false,
           animation: "fade",
-          contentStyle: { backgroundColor: "#0F172A" },
+          contentStyle: { backgroundColor: "#09090B" },
         }}
       >
         <Stack.Screen name="Splash" component={SplashScreen} />

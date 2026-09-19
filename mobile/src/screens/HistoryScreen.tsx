@@ -1,5 +1,6 @@
 /**
  * Screen 8 — History / Past Queries
+ * Luxury Black & Gold Theme (#09090B + #D4AF37)
  * Reads real conversation history from AsyncStorage ("chat_history_v3")
  * and displays past queries, timestamps, risk levels, and responses.
  */
@@ -60,7 +61,7 @@ export default function HistoryScreen({ navigation }: Props) {
             const consensusScore =
               botMsg?.riskObject?.hazards?.rainfall?.consensus_score || 92;
 
-            let riskColor = "#34D399";
+            let riskColor = "#D4AF37";
             if (rainRisk === "severe") riskColor = "#EF4444";
             else if (rainRisk === "high") riskColor = "#F59E0B";
             else if (rainRisk === "moderate") riskColor = "#FBBF24";
@@ -85,7 +86,6 @@ export default function HistoryScreen({ navigation }: Props) {
         }
       }
 
-      // Default sample queries if no history yet
       setHistory([
         {
           id: "1",
@@ -95,7 +95,7 @@ export default function HistoryScreen({ navigation }: Props) {
           time: "Today",
           consensus: "92%",
           risk: "LOW",
-          color: "#34D399",
+          color: "#D4AF37",
         },
       ]);
     } catch (e) {
@@ -109,29 +109,31 @@ export default function HistoryScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
         <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color="#F1F5F9" />
+          <Ionicons name="arrow-back" size={20} color="#D4AF37" />
         </TouchableOpacity>
-        <Text style={styles.title}>Query History</Text>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.title}>Query History</Text>
+          <Text style={styles.subtitle}>Previous AI Sessions</Text>
+        </View>
         <TouchableOpacity
           style={styles.iconBtn}
           onPress={async () => {
             await AsyncStorage.removeItem("chat_history_v3");
             setHistory([]);
           }}
-          title="Clear"
         >
-          <Ionicons name="trash-outline" size={18} color="#64748B" />
+          <Ionicons name="trash-outline" size={18} color="#D4AF37" />
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator size="large" color="#60A5FA" />
+          <ActivityIndicator size="large" color="#D4AF37" />
         </View>
       ) : history.length === 0 ? (
         <View style={styles.centerBox}>
-          <Ionicons name="time-outline" size={48} color="#334155" />
-          <Text style={styles.emptyText}>No query history found</Text>
+          <Ionicons name="time-outline" size={48} color="#27272A" />
+          <Text style={styles.emptyText}>No query history recorded yet</Text>
         </View>
       ) : (
         <FlatList
@@ -167,7 +169,7 @@ export default function HistoryScreen({ navigation }: Props) {
                 <View
                   style={[
                     styles.riskBadge,
-                    { backgroundColor: `${item.color}20`, borderColor: item.color },
+                    { backgroundColor: `${item.color}15`, borderColor: item.color },
                   ]}
                 >
                   <Text style={[styles.riskText, { color: item.color }]}>
@@ -184,7 +186,7 @@ export default function HistoryScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B1120" },
+  container: { flex: 1, backgroundColor: "#09090B" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -192,20 +194,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1E293B",
-    backgroundColor: "#0F172A",
+    borderBottomColor: "rgba(212, 175, 55, 0.15)",
+    backgroundColor: "#141416",
+  },
+  headerTitleContainer: {
+    alignItems: "center",
   },
   iconBtn: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: "#1E293B",
+    borderRadius: 12,
+    backgroundColor: "#1C1C20",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.25)",
   },
-  title: { fontSize: 17, fontWeight: "700", color: "#F1F5F9" },
+  title: { fontSize: 17, fontWeight: "700", color: "#FFFDF7" },
+  subtitle: { fontSize: 11, color: "#D4AF37", marginTop: 1 },
   centerBox: {
     flex: 1,
     justifyContent: "center",
@@ -213,39 +219,41 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
-    color: "#64748B",
+    color: "#71717A",
     fontSize: 14,
   },
   list: { padding: 16, gap: 12 },
   card: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.2)",
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   personaBadge: {
-    backgroundColor: "rgba(96, 165, 250, 0.15)",
+    backgroundColor: "rgba(212, 175, 55, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.3)",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
-  personaText: { color: "#60A5FA", fontSize: 10, fontWeight: "700" },
-  timeText: { color: "#64748B", fontSize: 12 },
-  queryText: { color: "#F1F5F9", fontSize: 15, fontWeight: "600", marginBottom: 6 },
-  responseText: { color: "#94A3B8", fontSize: 13, lineHeight: 18, marginBottom: 12 },
+  personaText: { color: "#D4AF37", fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
+  timeText: { color: "#71717A", fontSize: 12 },
+  queryText: { color: "#FFFDF7", fontSize: 15, fontWeight: "700", marginBottom: 6 },
+  responseText: { color: "#A1A1AA", fontSize: 13, lineHeight: 18, marginBottom: 12 },
   cardFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.05)",
+    borderTopColor: "#27272A",
     paddingTop: 10,
   },
   metricItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  metricLabel: { color: "#94A3B8", fontSize: 12 },
-  metricVal: { color: "#60A5FA", fontSize: 13, fontWeight: "700" },
+  metricLabel: { color: "#71717A", fontSize: 12 },
+  metricVal: { color: "#D4AF37", fontSize: 13, fontWeight: "700" },
   riskBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,

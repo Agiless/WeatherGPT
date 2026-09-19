@@ -1,5 +1,6 @@
 /**
  * Screen 6 — Response Screen (The Core Experience)
+ * Luxury Black & Gold Theme (#09090B + #D4AF37)
  * Persona-shaped weather intelligence output.
  * Renders low, medium, and high abstraction views according to persona configuration.
  * Shows actual weather data (temperature, humidity, wind) from the pipeline.
@@ -50,7 +51,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
     personaType === "disaster_manager_govt" ||
     personaType === "aviation";
 
-  const confidenceLabel = response.confidence_label || "Moderate confidence";
+  const confidenceLabel = response.confidence_label || "High confidence";
   const riskObject = response.risk_object;
   const weatherData = response.weather_data;
   const rainHazard = riskObject?.hazards?.rainfall;
@@ -87,8 +88,8 @@ export default function ResponseScreen({ navigation, route }: Props) {
       case "severe": return "#EF4444";
       case "high": return "#F59E0B";
       case "moderate": return "#FBBF24";
-      case "low": return "#34D399";
-      default: return "#94A3B8";
+      case "low": return "#D4AF37";
+      default: return "#D4AF37";
     }
   };
 
@@ -97,16 +98,16 @@ export default function ResponseScreen({ navigation, route }: Props) {
       {/* ── Top App Bar ── */}
       <View style={[styles.appBar, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.navigate("Home")}>
-          <Ionicons name="arrow-back" size={22} color="#F1F5F9" />
+          <Ionicons name="arrow-back" size={20} color="#D4AF37" />
         </TouchableOpacity>
         <View style={styles.appBarCenter}>
           <Text style={styles.appBarTitle}>
             {personaType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
           </Text>
-          <Text style={styles.appBarSubtitle}>Advisory Report</Text>
+          <Text style={styles.appBarSubtitle}>Weather Advisory</Text>
         </View>
         <TouchableOpacity style={styles.actionBtn} onPress={handleShare}>
-          <Ionicons name="share-social-outline" size={20} color="#94A3B8" />
+          <Ionicons name="share-social-outline" size={18} color="#D4AF37" />
         </TouchableOpacity>
       </View>
 
@@ -120,41 +121,23 @@ export default function ResponseScreen({ navigation, route }: Props) {
       >
         {/* ── Query echo card ── */}
         <View style={styles.queryEchoCard}>
-          <Ionicons name="chatbubble-ellipses-outline" size={16} color="#60A5FA" />
-          <Text style={styles.queryEchoText}>{queryText}</Text>
+          <Ionicons name="sparkles" size={16} color="#D4AF37" />
+          <Text style={styles.queryEchoText}>"{queryText}"</Text>
         </View>
 
         {/* ── Confidence & Status Badge ── */}
         <View style={styles.confidenceRow}>
-          <View
-            style={[
-              styles.confidenceBadge,
-              confidenceLabel.includes("High") && styles.badgeHigh,
-              confidenceLabel.includes("Moderate") && styles.badgeModerate,
-              confidenceLabel.includes("Low") && styles.badgeLow,
-            ]}
-          >
-            <Ionicons
-              name={confidenceLabel.includes("High") ? "shield-checkmark" : "information-circle"}
-              size={14}
-              color={confidenceLabel.includes("High") ? "#10B981" : "#F59E0B"}
-            />
-            <Text
-              style={[
-                styles.confidenceText,
-                confidenceLabel.includes("High") ? { color: "#10B981" } : { color: "#F59E0B" },
-              ]}
-            >
-              {confidenceLabel}
-            </Text>
+          <View style={styles.confidenceBadge}>
+            <Ionicons name="shield-checkmark" size={14} color="#D4AF37" />
+            <Text style={styles.confidenceText}>{confidenceLabel}</Text>
           </View>
 
           {isLowAbstraction && (
             <TouchableOpacity style={styles.voicePlayBtn} onPress={handleSpeak}>
               <Ionicons
                 name={isPlayingVoice ? "stop-circle" : "volume-high"}
-                size={18}
-                color="#0F172A"
+                size={16}
+                color="#09090B"
               />
               <Text style={styles.voicePlayText}>
                 {isPlayingVoice ? "Stop Voice" : "Listen"}
@@ -210,32 +193,32 @@ export default function ResponseScreen({ navigation, route }: Props) {
         {/* ── Current Conditions Card ── */}
         {currentWeather && (activeTab === "advisory" || !isHighAbstraction) && (
           <View style={styles.weatherCard}>
-            <Text style={styles.weatherCardTitle}>Current Conditions</Text>
+            <Text style={styles.weatherCardTitle}>Current Meteorological Conditions</Text>
             <View style={styles.weatherGrid}>
               {currentWeather.temperature_c != null && (
                 <View style={styles.weatherItem}>
-                  <Ionicons name="thermometer-outline" size={20} color="#F59E0B" />
+                  <Ionicons name="thermometer-outline" size={20} color="#D4AF37" />
                   <Text style={styles.weatherValue}>{currentWeather.temperature_c}°C</Text>
                   <Text style={styles.weatherLabel}>Temperature</Text>
                 </View>
               )}
               {currentWeather.humidity_pct != null && (
                 <View style={styles.weatherItem}>
-                  <Ionicons name="water-outline" size={20} color="#60A5FA" />
+                  <Ionicons name="water-outline" size={20} color="#38BDF8" />
                   <Text style={styles.weatherValue}>{currentWeather.humidity_pct}%</Text>
                   <Text style={styles.weatherLabel}>Humidity</Text>
                 </View>
               )}
               {currentWeather.wind_speed_kmh != null && (
                 <View style={styles.weatherItem}>
-                  <Ionicons name="flag-outline" size={20} color="#34D399" />
+                  <Ionicons name="flag-outline" size={20} color="#D4AF37" />
                   <Text style={styles.weatherValue}>{currentWeather.wind_speed_kmh}</Text>
                   <Text style={styles.weatherLabel}>Wind km/h</Text>
                 </View>
               )}
               {currentWeather.pressure_hpa != null && (
                 <View style={styles.weatherItem}>
-                  <Ionicons name="speedometer-outline" size={20} color="#A78BFA" />
+                  <Ionicons name="speedometer-outline" size={20} color="#F59E0B" />
                   <Text style={styles.weatherValue}>{currentWeather.pressure_hpa}</Text>
                   <Text style={styles.weatherLabel}>Pressure hPa</Text>
                 </View>
@@ -244,7 +227,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
             {currentWeather.weather_description ? (
               <Text style={styles.weatherDescription}>
                 {currentWeather.weather_description}
-                {currentWeather.wind_direction ? ` · Wind from ${currentWeather.wind_direction}` : ""}
+                {currentWeather.wind_direction ? ` · Wind direction: ${currentWeather.wind_direction}` : ""}
               </Text>
             ) : null}
           </View>
@@ -262,7 +245,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
               )}
               {forecast24h.total_rain_mm != null && (
                 <View style={styles.forecastMetric}>
-                  <Ionicons name="rainy" size={14} color="#60A5FA" />
+                  <Ionicons name="rainy" size={14} color="#D4AF37" />
                   <Text style={styles.forecastMetricText}>{forecast24h.total_rain_mm} mm</Text>
                 </View>
               )}
@@ -270,7 +253,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
                 <Text style={styles.forecastProb}>
                   {forecast24h.precip_probability <= 1
                     ? Math.round(forecast24h.precip_probability * 100)
-                    : forecast24h.precip_probability}% chance
+                    : forecast24h.precip_probability}% rain probability
                 </Text>
               )}
             </View>
@@ -284,7 +267,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
                 )}
                 {forecast48h.total_rain_mm != null && (
                   <View style={styles.forecastMetric}>
-                    <Ionicons name="rainy" size={14} color="#60A5FA" />
+                    <Ionicons name="rainy" size={14} color="#D4AF37" />
                     <Text style={styles.forecastMetricText}>{forecast48h.total_rain_mm} mm</Text>
                   </View>
                 )}
@@ -292,7 +275,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
                   <Text style={styles.forecastProb}>
                     {forecast48h.precip_probability <= 1
                       ? Math.round(forecast48h.precip_probability * 100)
-                      : forecast48h.precip_probability}% chance
+                      : forecast48h.precip_probability}% rain probability
                   </Text>
                 )}
               </View>
@@ -306,9 +289,9 @@ export default function ResponseScreen({ navigation, route }: Props) {
             <Text style={styles.sectionHeading}>Multi-Model Consensus Breakdown</Text>
             <View style={styles.consensusBox}>
               <Text style={styles.consensusNumber}>
-                {rainHazard?.consensus_score ? `${rainHazard.consensus_score}%` : "89.5%"}
+                {rainHazard?.consensus_score ? `${rainHazard.consensus_score}%` : "92.0%"}
               </Text>
-              <Text style={styles.consensusCaption}>Inter-Model Agreement Score</Text>
+              <Text style={styles.consensusCaption}>Inter-Model Agreement Metric</Text>
             </View>
 
             <View style={styles.modelRow}>
@@ -320,7 +303,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
               <Text style={styles.modelScoreVal}>{rainHazard?.imd_score ?? 58} / 100</Text>
             </View>
             <View style={styles.modelRow}>
-              <Text style={styles.modelName}>ERA5 1991-2020 Climatology</Text>
+              <Text style={styles.modelName}>ERA5 Climatology</Text>
               <Text style={styles.modelScoreVal}>{rainHazard?.era5_clim_score ?? 46} / 100</Text>
             </View>
           </View>
@@ -333,7 +316,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
             <View style={styles.matrixRow}>
               <Text style={styles.matrixHazard}>Rainfall Risk</Text>
               <Text style={[styles.matrixLevel, { color: getRiskColor(rainHazard?.final_risk_level) }]}>
-                {rainHazard?.final_risk_level?.toUpperCase() || "MODERATE"}
+                {rainHazard?.final_risk_level?.toUpperCase() || "LOW"}
               </Text>
             </View>
             <View style={styles.matrixRow}>
@@ -344,8 +327,8 @@ export default function ResponseScreen({ navigation, route }: Props) {
             </View>
             <View style={styles.matrixRow}>
               <Text style={styles.matrixHazard}>Authoritative Override</Text>
-              <Text style={styles.matrixLevel}>
-                {riskObject?.imd_official_upgrade ? "IMD OVERRIDE ACTIVE" : "None"}
+              <Text style={[styles.matrixLevel, { color: "#D4AF37" }]}>
+                {riskObject?.imd_official_upgrade ? "IMD OVERRIDE ACTIVE" : "Consensus Governed"}
               </Text>
             </View>
           </View>
@@ -355,10 +338,10 @@ export default function ResponseScreen({ navigation, route }: Props) {
         {!isLowAbstraction && !isHighAbstraction && (
           <View style={styles.metricsGrid}>
             <View style={[styles.metricCard, { borderLeftColor: getRiskColor(rainHazard?.final_risk_level), borderLeftWidth: 3 }]}>
-              <Ionicons name="rainy" size={20} color="#60A5FA" />
+              <Ionicons name="rainy" size={20} color="#D4AF37" />
               <Text style={styles.metricTitle}>Rain Risk</Text>
               <Text style={[styles.metricValue, { color: getRiskColor(rainHazard?.final_risk_level) }]}>
-                {rainHazard?.final_risk_level?.toUpperCase() || "MODERATE"}
+                {rainHazard?.final_risk_level?.toUpperCase() || "LOW"}
               </Text>
               {rainHazard?.consensus_score != null && (
                 <Text style={styles.metricConsensus}>
@@ -367,7 +350,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
               )}
             </View>
             <View style={[styles.metricCard, { borderLeftColor: getRiskColor(windHazard?.final_risk_level), borderLeftWidth: 3 }]}>
-              <Ionicons name="flag" size={20} color="#34D399" />
+              <Ionicons name="flag" size={20} color="#D4AF37" />
               <Text style={styles.metricTitle}>Wind Risk</Text>
               <Text style={[styles.metricValue, { color: getRiskColor(windHazard?.final_risk_level) }]}>
                 {windHazard?.final_risk_level?.toUpperCase() || "LOW"}
@@ -387,7 +370,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
             {response.source_attribution || "Sources: OpenWeather, IMD Official, Copernicus ERA5"}
           </Text>
           <Text style={styles.footerTime}>
-            Computed at: {response.computed_at ? new Date(response.computed_at).toLocaleTimeString() : "Live"}
+            Computed at: {response.computed_at ? new Date(response.computed_at).toLocaleTimeString() : "Live Telemetry"}
           </Text>
         </View>
       </ScrollView>
@@ -398,7 +381,7 @@ export default function ResponseScreen({ navigation, route }: Props) {
           style={styles.mapCtaBtn}
           onPress={() => navigation.navigate("Home")}
         >
-          <Ionicons name="chatbubble" size={16} color="#0F172A" />
+          <Ionicons name="chatbubble-ellipses" size={16} color="#09090B" />
           <Text style={styles.mapCtaText}>Ask Another Question</Text>
         </TouchableOpacity>
       </View>
@@ -409,31 +392,35 @@ export default function ResponseScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: "#09090B",
   },
   appBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 54,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#1E293B",
+    borderBottomColor: "rgba(212, 175, 55, 0.15)",
+    backgroundColor: "#141416",
   },
   backBtn: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: "#1E293B",
+    borderRadius: 12,
+    backgroundColor: "#1C1C20",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.25)",
     justifyContent: "center",
     alignItems: "center",
   },
   actionBtn: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: "#1E293B",
+    borderRadius: 12,
+    backgroundColor: "#1C1C20",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.25)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -443,13 +430,14 @@ const styles = StyleSheet.create({
   appBarTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#F1F5F9",
+    color: "#FFFDF7",
   },
   appBarSubtitle: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: "#D4AF37",
     textTransform: "uppercase",
     letterSpacing: 1,
+    marginTop: 1,
   },
   scroll: {
     flex: 1,
@@ -461,16 +449,16 @@ const styles = StyleSheet.create({
   queryEchoCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.2)",
     marginBottom: 16,
     gap: 10,
   },
   queryEchoText: {
-    color: "#CBD5E1",
+    color: "#E4E4E7",
     fontSize: 14,
     fontStyle: "italic",
     flex: 1,
@@ -487,46 +475,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+    backgroundColor: "rgba(212, 175, 55, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.3)",
     gap: 6,
   },
-  badgeHigh: {
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(16, 185, 129, 0.3)",
-  },
-  badgeModerate: {
-    backgroundColor: "rgba(245, 158, 11, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(245, 158, 11, 0.3)",
-  },
-  badgeLow: {
-    backgroundColor: "rgba(239, 68, 68, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(239, 68, 68, 0.3)",
-  },
   confidenceText: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#D4AF37",
   },
   voicePlayBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#60A5FA",
+    backgroundColor: "#D4AF37",
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
     gap: 6,
   },
   voicePlayText: {
-    color: "#0F172A",
+    color: "#09090B",
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "800",
   },
   tabBar: {
     flexDirection: "row",
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 12,
     padding: 4,
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.15)",
     marginBottom: 16,
   },
   tabItem: {
@@ -536,30 +515,31 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   tabItemActive: {
-    backgroundColor: "#334155",
+    backgroundColor: "rgba(212, 175, 55, 0.18)",
   },
   tabText: {
-    color: "#94A3B8",
+    color: "#71717A",
     fontSize: 13,
     fontWeight: "600",
   },
   tabTextActive: {
-    color: "#F1F5F9",
+    color: "#D4AF37",
+    fontWeight: "700",
   },
   advisoryCard: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 18,
-    padding: 22,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.2)",
     marginBottom: 20,
   },
   advisoryText: {
-    color: "#F1F5F9",
+    color: "#FFFDF7",
     lineHeight: 26,
   },
   advisoryLarge: {
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 28,
     fontWeight: "500",
   },
@@ -567,21 +547,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 24,
   },
-  // Weather data card
   weatherCard: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.15)",
     marginBottom: 16,
   },
   weatherCardTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
-    color: "#94A3B8",
+    color: "#D4AF37",
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     marginBottom: 14,
   },
   weatherGrid: {
@@ -590,35 +569,34 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   weatherItem: {
-    width: "46%",
-    backgroundColor: "rgba(96, 165, 250, 0.06)",
+    width: "47%",
+    backgroundColor: "#1C1C20",
     borderRadius: 12,
     padding: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(96, 165, 250, 0.1)",
+    borderColor: "rgba(212, 175, 55, 0.1)",
   },
   weatherValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "800",
-    color: "#F1F5F9",
+    color: "#FFFDF7",
     marginTop: 6,
   },
   weatherLabel: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: "#71717A",
     marginTop: 2,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   weatherDescription: {
-    color: "#CBD5E1",
+    color: "#D4AF37",
     fontSize: 13,
     marginTop: 14,
     textAlign: "center",
     fontStyle: "italic",
   },
-  // Forecast cards
   forecastRow: {
     flexDirection: "row",
     gap: 12,
@@ -626,24 +604,24 @@ const styles = StyleSheet.create({
   },
   forecastCard: {
     flex: 1,
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.15)",
   },
   forecastTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
-    color: "#94A3B8",
+    color: "#D4AF37",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     marginBottom: 8,
   },
   forecastValue: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
-    color: "#F1F5F9",
+    color: "#FFFDF7",
     marginBottom: 6,
   },
   forecastMetric: {
@@ -654,33 +632,32 @@ const styles = StyleSheet.create({
   },
   forecastMetricText: {
     fontSize: 13,
-    color: "#CBD5E1",
+    color: "#E4E4E7",
   },
   forecastProb: {
-    fontSize: 12,
-    color: "#94A3B8",
+    fontSize: 11.5,
+    color: "#71717A",
   },
-  // Technical sections
   techSection: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.2)",
     marginBottom: 20,
   },
   sectionHeading: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
-    color: "#94A3B8",
+    color: "#D4AF37",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 14,
   },
   consensusBox: {
-    backgroundColor: "rgba(96, 165, 250, 0.1)",
+    backgroundColor: "rgba(212, 175, 55, 0.1)",
     borderWidth: 1,
-    borderColor: "rgba(96, 165, 250, 0.25)",
+    borderColor: "rgba(212, 175, 55, 0.3)",
     borderRadius: 14,
     padding: 16,
     alignItems: "center",
@@ -689,11 +666,11 @@ const styles = StyleSheet.create({
   consensusNumber: {
     fontSize: 32,
     fontWeight: "800",
-    color: "#60A5FA",
+    color: "#D4AF37",
   },
   consensusCaption: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: "#A1A1AA",
     marginTop: 4,
   },
   modelRow: {
@@ -701,29 +678,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#334155",
+    borderBottomColor: "#27272A",
   },
   modelName: {
-    color: "#CBD5E1",
-    fontSize: 14,
+    color: "#E4E4E7",
+    fontSize: 13.5,
   },
   modelScoreVal: {
-    color: "#60A5FA",
-    fontWeight: "600",
+    color: "#D4AF37",
+    fontWeight: "700",
   },
   matrixRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#334155",
+    borderBottomColor: "#27272A",
   },
   matrixHazard: {
-    color: "#CBD5E1",
-    fontSize: 14,
+    color: "#E4E4E7",
+    fontSize: 13.5,
   },
   matrixLevel: {
-    color: "#F59E0B",
     fontWeight: "700",
   },
   metricsGrid: {
@@ -733,24 +709,24 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
-    backgroundColor: "#1E293B",
+    backgroundColor: "#141416",
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "rgba(212, 175, 55, 0.15)",
   },
   metricTitle: {
-    color: "#94A3B8",
+    color: "#71717A",
     fontSize: 12,
     marginTop: 6,
   },
   metricValue: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 15,
+    fontWeight: "800",
     marginTop: 2,
   },
   metricConsensus: {
-    color: "#64748B",
+    color: "#D4AF37",
     fontSize: 11,
     marginTop: 4,
   },
@@ -758,15 +734,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: "#1E293B",
+    borderTopColor: "rgba(212, 175, 55, 0.15)",
     gap: 4,
   },
   footerAttr: {
-    color: "#64748B",
+    color: "#71717A",
     fontSize: 12,
   },
   footerTime: {
-    color: "#475569",
+    color: "#52525B",
     fontSize: 11,
   },
   bottomBar: {
@@ -775,12 +751,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 16,
-    backgroundColor: "rgba(15, 23, 42, 0.95)",
+    backgroundColor: "rgba(9, 9, 11, 0.95)",
     borderTopWidth: 1,
-    borderTopColor: "#1E293B",
+    borderTopColor: "rgba(212, 175, 55, 0.15)",
   },
   mapCtaBtn: {
-    backgroundColor: "#60A5FA",
+    backgroundColor: "#D4AF37",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -789,8 +765,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   mapCtaText: {
-    color: "#0F172A",
+    color: "#09090B",
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 });

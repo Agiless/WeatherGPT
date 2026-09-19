@@ -1,5 +1,6 @@
 /**
  * Screen 1 — Splash / App Launch
+ * Luxury Black & Gold Theme (#09090B + #D4AF37)
  * Logo + connectivity check → pings GET /v1/health
  * Routes to Onboarding (first launch) or Home
  */
@@ -25,7 +26,7 @@ export default function SplashScreen({ navigation }: Props) {
     "checking"
   );
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  const scaleAnim = React.useRef(new Animated.Value(0.8)).current;
+  const scaleAnim = React.useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
     // Entrance animation
@@ -37,7 +38,7 @@ export default function SplashScreen({ navigation }: Props) {
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        friction: 8,
+        friction: 7,
         tension: 40,
         useNativeDriver: true,
       }),
@@ -48,10 +49,8 @@ export default function SplashScreen({ navigation }: Props) {
       const healthy = await checkHealth();
       setStatus(healthy ? "ok" : "offline");
 
-      // Short delay so user sees the splash
       await new Promise((r) => setTimeout(r, 1200));
 
-      // Check if onboarding was completed
       const onboarded = await AsyncStorage.getItem("onboarding_complete");
       if (onboarded === "true") {
         navigation.replace("Home");
@@ -72,32 +71,32 @@ export default function SplashScreen({ navigation }: Props) {
         ]}
       >
         <View style={styles.iconCircle}>
-          <Ionicons name="thunderstorm" size={48} color="#60A5FA" />
+          <Ionicons name="sparkles" size={44} color="#D4AF37" />
         </View>
         <Text style={styles.title}>WeatherGPT</Text>
-        <Text style={styles.subtitle}>AI Weather Intelligence</Text>
+        <Text style={styles.subtitle}>Conversational Weather Intelligence</Text>
       </Animated.View>
 
       <View style={styles.statusContainer}>
         {status === "checking" && (
           <>
-            <ActivityIndicator size="small" color="#60A5FA" />
-            <Text style={styles.statusText}>Connecting to server...</Text>
+            <ActivityIndicator size="small" color="#D4AF37" />
+            <Text style={styles.statusText}>Connecting to weather intelligence...</Text>
           </>
         )}
         {status === "ok" && (
           <>
-            <Ionicons name="checkmark-circle" size={20} color="#34D399" />
-            <Text style={[styles.statusText, { color: "#34D399" }]}>
-              API Connected
+            <Ionicons name="checkmark-circle" size={18} color="#D4AF37" />
+            <Text style={[styles.statusText, { color: "#D4AF37" }]}>
+              API Connected · Ready
             </Text>
           </>
         )}
         {status === "offline" && (
           <>
-            <Ionicons name="cloud-offline" size={20} color="#F59E0B" />
+            <Ionicons name="cloud-offline" size={18} color="#F59E0B" />
             <Text style={[styles.statusText, { color: "#F59E0B" }]}>
-              Offline Mode
+              Offline Baseline Mode
             </Text>
           </>
         )}
@@ -109,7 +108,7 @@ export default function SplashScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: "#09090B",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -120,35 +119,37 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: "rgba(96, 165, 250, 0.15)",
+    backgroundColor: "rgba(212, 175, 55, 0.12)",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "rgba(96, 165, 250, 0.3)",
+    marginBottom: 22,
+    borderWidth: 1.5,
+    borderColor: "rgba(212, 175, 55, 0.35)",
   },
   title: {
-    fontSize: 36,
-    fontWeight: "800",
-    color: "#F1F5F9",
-    letterSpacing: 1,
+    fontSize: 34,
+    fontWeight: "900",
+    color: "#FFFDF7",
+    letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: "#94A3B8",
+    fontSize: 12,
+    color: "#D4AF37",
     marginTop: 6,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     textTransform: "uppercase",
+    fontWeight: "600",
   },
   statusContainer: {
     flexDirection: "row",
     alignItems: "center",
     position: "absolute",
-    bottom: 80,
+    bottom: 70,
     gap: 8,
   },
   statusText: {
-    color: "#94A3B8",
-    fontSize: 14,
+    color: "#71717A",
+    fontSize: 13,
+    fontWeight: "500",
   },
 });
