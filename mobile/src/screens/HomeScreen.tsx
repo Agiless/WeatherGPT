@@ -1,9 +1,11 @@
 /**
  * Screen 3 — Conversational Chat Interface (WeatherGPT)
- * ChatGPT / Claude / Gemini style interface with:
- * 1. Chat Sessions Drawer (+ New Chat & Previous Chats list)
- * 2. Real-time Voice-to-Voice Mode (ChatGPT Voice Mode style with glowing pulsing orb)
- * 3. Continuous message stream with Indic voice, weather metrics & rich cards
+ * Styled with the exact, elegant structure and aesthetic of Claude (Anthropic Claude UI):
+ * - Claude warm dark palette (#181716, #22211F, #2B2A27, warm amber/terracotta accents #D97706 / #E07A5F)
+ * - Claude Sidebar Drawer (+ Start new chat, sectioned history "Today", "Previous 7 days")
+ * - Claude Landing Hero with 2x2 capability cards
+ * - Claude input box with embedded model/persona selector & action dock
+ * - Rich Assistant message bubbles with TTS voice playback, weather metrics, and research artifacts
  */
 
 import React, { useState, useEffect, useRef } from "react";
@@ -28,7 +30,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Speech from "expo-speech";
 import { apiRequest, getApiBase } from "../api/client";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type Message = {
   id: string;
@@ -53,13 +55,32 @@ type ChatSession = {
 
 type Props = { navigation: any };
 
-const QUICK_CHIPS = [
-  { label: "Will it rain today?", icon: "rainy" },
-  { label: "Can I spray pesticides?", icon: "leaf" },
-  { label: "Wind & Storm alert?", icon: "warning" },
-  { label: "Next 48h forecast", icon: "time" },
-  { label: "Open Rain Radar", icon: "map" },
-] as const;
+const CLAUDE_PROMPTS = [
+  {
+    title: "Agricultural Advisory",
+    subtitle: "Pesticide spray & harvest weather window",
+    prompt: "Can I spray pesticides tomorrow in Coimbatore? Give detailed harvest advisory.",
+    icon: "leaf-outline",
+  },
+  {
+    title: "Doppler Rain Radar",
+    subtitle: "Real-time precipitation & storm clouds",
+    prompt: "Open Rain Radar",
+    icon: "rainy-outline",
+  },
+  {
+    title: "Ground Hazard Check",
+    subtitle: "Citizen flood & road disruption alerts",
+    prompt: "Are there any active flood or waterlogging alerts reported near Chennai?",
+    icon: "warning-outline",
+  },
+  {
+    title: "Marine & Wind Analysis",
+    subtitle: "Swell, wind velocity & safe fishing zones",
+    prompt: "Wind speed and swell forecast for Tamil Nadu coastal waters next 24h.",
+    icon: "boat-outline",
+  },
+];
 
 export default function HomeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
@@ -67,7 +88,7 @@ export default function HomeScreen({ navigation }: Props) {
   const currentAudioRef = useRef<any>(null);
   const speechRecognitionRef = useRef<any>(null);
 
-  // Core chat state
+  // State
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -79,7 +100,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [isListening, setIsListening] = useState(false);
   const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
 
-  // Modals & Drawers
+  // Modals
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const [voiceModeStatus, setVoiceModeStatus] = useState<"listening" | "thinking" | "speaking">("listening");
@@ -89,7 +110,6 @@ export default function HomeScreen({ navigation }: Props) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const voiceOrbAnim = useRef(new Animated.Value(1)).current;
 
-  // Pulse animation for mic and voice orb
   useEffect(() => {
     if (isListening || isVoiceModeActive) {
       Animated.loop(
@@ -101,7 +121,7 @@ export default function HomeScreen({ navigation }: Props) {
 
       Animated.loop(
         Animated.sequence([
-          Animated.timing(voiceOrbAnim, { toValue: 1.35, duration: 800, useNativeDriver: true }),
+          Animated.timing(voiceOrbAnim, { toValue: 1.3, duration: 800, useNativeDriver: true }),
           Animated.timing(voiceOrbAnim, { toValue: 0.95, duration: 800, useNativeDriver: true }),
         ])
       ).start();
@@ -111,7 +131,7 @@ export default function HomeScreen({ navigation }: Props) {
     }
   }, [isListening, isVoiceModeActive]);
 
-  // Initialize and load sessions from storage
+  // Load chat sessions from storage
   useEffect(() => {
     const initApp = async () => {
       try {
@@ -127,7 +147,7 @@ export default function HomeScreen({ navigation }: Props) {
           setIsOnline(false);
         }
 
-        const rawSessions = await AsyncStorage.getItem("weathergpt_chat_sessions_v4");
+        const rawSessions = await AsyncStorage.getItem("claude_weathergpt_sessions_v1");
         if (rawSessions) {
           const parsed: ChatSession[] = JSON.parse(rawSessions);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -138,32 +158,19 @@ export default function HomeScreen({ navigation }: Props) {
           }
         }
 
-        // Start initial default session
-        const activePersona = savedPersona || "farmer";
-        const activeLang = savedLang || "ta";
-        const welcomeText = getWelcomeGreeting(activePersona, activeLang);
-
+        // Start empty new chat on fresh session (Claude style landing)
         const initialSession: ChatSession = {
           id: `session-${Date.now()}`,
-          title: activeLang === "ta" ? "புதிய உரையாடல் (New Chat)" : "New Weather Chat",
+          title: "New Weather Chat",
           createdAt: formatTime(new Date()),
-          persona: activePersona,
-          language: activeLang,
-          messages: [
-            {
-              id: "welcome-1",
-              sender: "assistant",
-              text: welcomeText,
-              timestamp: formatTime(new Date()),
-              confidenceLabel: "High Confidence",
-              sourceAttribution: "WeatherGPT Indic Risk Engine",
-            },
-          ],
+          persona: savedPersona || "farmer",
+          language: savedLang || "ta",
+          messages: [],
         };
 
         setSessions([initialSession]);
         setCurrentSessionId(initialSession.id);
-        setMessages(initialSession.messages);
+        setMessages([]);
       } catch (err) {
         console.warn("Init app error:", err);
       }
@@ -181,65 +188,39 @@ export default function HomeScreen({ navigation }: Props) {
         }
         return s;
       });
-      AsyncStorage.setItem("weathergpt_chat_sessions_v4", JSON.stringify(updated)).catch(() => {});
+      AsyncStorage.setItem("claude_weathergpt_sessions_v1", JSON.stringify(updated)).catch(() => {});
     }
   }, [messages]);
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 150);
   }, [messages, isLoading]);
 
-  const getWelcomeGreeting = (p: string, lang: string) => {
-    if (lang === "ta") {
-      return `வணக்கம்! நான் WeatherGPT. உங்கள் ${p === "farmer" ? "விவசாய" : "வானிலை"} வழிகாட்டி. மழை, காற்று அல்லது வானிலை தொடர்பான எந்த கேள்வியையும் கேளுங்கள்!`;
-    } else if (lang === "hi") {
-      return `नमस्ते! मैं WeatherGPT हूँ। आपकी मौसम व आपदा सुरक्षा मार्गदर्शिका। बारिश, हवा या खेती से संबंधित कोई भी सवाल पूछें!`;
-    } else if (lang === "te") {
-      return `నమస్కారం! నేను WeatherGPT ని. వర్షం, గాలి அல்லது వాతావరణం பற்றி ఏదైనా ప్రశ్న అడగండి!`;
-    }
-    return `Hello! I'm WeatherGPT, your Conversational Weather & Disaster AI. Ask me any weather or risk question in English or your regional language!`;
-  };
-
   const formatTime = (d: Date) => {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  // ── Start New Chat (+ New Chat button) ──
-  const handleCreateNewChat = () => {
-    const activePersona = persona || "farmer";
-    const activeLang = language || "ta";
-    const welcomeText = getWelcomeGreeting(activePersona, activeLang);
-
+  // ── Start New Chat (Claude Style) ──
+  const handleStartNewChat = () => {
     const newSession: ChatSession = {
       id: `session-${Date.now()}`,
-      title: activeLang === "ta" ? "புதிய உரையாடல் (New Chat)" : "New Weather Chat",
+      title: "New Chat",
       createdAt: formatTime(new Date()),
-      persona: activePersona,
-      language: activeLang,
-      messages: [
-        {
-          id: `welcome-${Date.now()}`,
-          sender: "assistant",
-          text: welcomeText,
-          timestamp: formatTime(new Date()),
-          confidenceLabel: "High Confidence",
-          sourceAttribution: "WeatherGPT Indic Risk Engine",
-        },
-      ],
+      persona: persona,
+      language: language,
+      messages: [],
     };
 
     const updatedSessions = [newSession, ...sessions];
     setSessions(updatedSessions);
     setCurrentSessionId(newSession.id);
-    setMessages(newSession.messages);
+    setMessages([]);
     setIsDrawerOpen(false);
-    AsyncStorage.setItem("weathergpt_chat_sessions_v4", JSON.stringify(updatedSessions)).catch(() => {});
+    AsyncStorage.setItem("claude_weathergpt_sessions_v1", JSON.stringify(updatedSessions)).catch(() => {});
   };
 
-  // ── Switch to a Previous Chat Session ──
   const handleSelectSession = (session: ChatSession) => {
     setCurrentSessionId(session.id);
     setMessages(session.messages);
@@ -248,7 +229,6 @@ export default function HomeScreen({ navigation }: Props) {
     setIsDrawerOpen(false);
   };
 
-  // ── Delete a Chat Session ──
   const handleDeleteSession = (sessionId: string) => {
     const filtered = sessions.filter((s) => s.id !== sessionId);
     setSessions(filtered);
@@ -257,13 +237,13 @@ export default function HomeScreen({ navigation }: Props) {
         setCurrentSessionId(filtered[0].id);
         setMessages(filtered[0].messages);
       } else {
-        handleCreateNewChat();
+        handleStartNewChat();
       }
     }
-    AsyncStorage.setItem("weathergpt_chat_sessions_v4", JSON.stringify(filtered)).catch(() => {});
+    AsyncStorage.setItem("claude_weathergpt_sessions_v1", JSON.stringify(filtered)).catch(() => {});
   };
 
-  // ── Inline Speech Recognition (Web & Mobile) ──
+  // ── Inline Speech Recognition ──
   const toggleListening = () => {
     if (isListening) {
       stopListening();
@@ -285,18 +265,9 @@ export default function HomeScreen({ navigation }: Props) {
           recognition.continuous = false;
           recognition.interimResults = true;
           recognition.lang =
-            language === "ta"
-              ? "ta-IN"
-              : language === "hi"
-              ? "hi-IN"
-              : language === "te"
-              ? "te-IN"
-              : "en-IN";
+            language === "ta" ? "ta-IN" : language === "hi" ? "hi-IN" : "en-IN";
 
-          recognition.onstart = () => {
-            setIsListening(true);
-          };
-
+          recognition.onstart = () => setIsListening(true);
           recognition.onresult = (event: any) => {
             let transcript = "";
             for (let i = 0; i < event.results.length; i++) {
@@ -304,24 +275,16 @@ export default function HomeScreen({ navigation }: Props) {
             }
             if (transcript) {
               setInputText(transcript);
-              if (isVoiceModeActive) {
-                setVoiceModeTranscript(transcript);
-              }
+              if (isVoiceModeActive) setVoiceModeTranscript(transcript);
             }
           };
-
-          recognition.onerror = (event: any) => {
-            console.warn("Speech recognition error:", event.error);
-            setIsListening(false);
-          };
-
+          recognition.onerror = () => setIsListening(false);
           recognition.onend = () => {
             setIsListening(false);
             if (isVoiceModeActive && inputText.trim()) {
               handleVoiceModeCycle(inputText.trim());
             }
           };
-
           recognition.start();
           return;
         } catch (e) {
@@ -330,21 +293,18 @@ export default function HomeScreen({ navigation }: Props) {
       }
     }
 
-    // Simulated voice fallback for testing
+    // Simulated fallback
     setIsListening(true);
     const demoVoiceQueries: Record<string, string> = {
-      ta: "நாளைக்கு எங்க பகுதியில் மழை பெய்யுமா?",
-      hi: "कल मेरे खेत में बारिश होगी क्या?",
+      ta: "நாளைக்கு எங்க பகுதியில் மழை பெய்யுமா? பயிர் அறுவடை செய்யலாமா?",
+      hi: "कल मेरे खेत में बारिश होगी क्या? क्या मुझे सिंचाई करनी चाहिए?",
       en: "Can I spray pesticides tomorrow in Coimbatore?",
     };
-    const sampleQuery = demoVoiceQueries[language] || demoVoiceQueries["ta"];
-
+    const sample = demoVoiceQueries[language] || demoVoiceQueries["ta"];
     setTimeout(() => {
-      setInputText(sampleQuery);
+      setInputText(sample);
       setIsListening(false);
-      if (isVoiceModeActive) {
-        handleVoiceModeCycle(sampleQuery);
-      }
+      if (isVoiceModeActive) handleVoiceModeCycle(sample);
     }, 2000);
   };
 
@@ -357,12 +317,11 @@ export default function HomeScreen({ navigation }: Props) {
     setIsListening(false);
   };
 
-  // ── Voice-to-Voice Automated Conversation Cycle (ChatGPT Voice Mode) ──
+  // ── Voice-to-Voice AI Mode ──
   const handleVoiceModeCycle = async (queryText: string) => {
     if (!queryText.trim()) return;
     setVoiceModeStatus("thinking");
 
-    // Add user message to chat stream
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       sender: "user",
@@ -395,7 +354,6 @@ export default function HomeScreen({ navigation }: Props) {
       };
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Speak response aloud
       setVoiceModeStatus("speaking");
       setVoiceModeTranscript(advisoryText);
 
@@ -431,13 +389,12 @@ export default function HomeScreen({ navigation }: Props) {
           },
         });
       }
-    } catch (e) {
-      console.warn("Voice mode error:", e);
+    } catch {
       setVoiceModeStatus("listening");
     }
   };
 
-  // ── Send Message in Continuous Chat Stream ──
+  // ── Send Chat Message (Continuous Feed) ──
   const handleSendMessage = async (queryOverride?: string) => {
     const textToSend = (queryOverride || inputText).trim();
     if (!textToSend || isLoading) return;
@@ -462,11 +419,11 @@ export default function HomeScreen({ navigation }: Props) {
       timestamp: formatTime(new Date()),
     };
 
-    // Auto-update session title based on first query
+    // Auto-update session title
     setSessions((prev) =>
       prev.map((s) => {
-        if (s.id === currentSessionId && s.messages.length <= 1) {
-          return { ...s, title: textToSend.slice(0, 26) + "..." };
+        if (s.id === currentSessionId && s.messages.length === 0) {
+          return { ...s, title: textToSend.slice(0, 28) };
         }
         return s;
       })
@@ -494,13 +451,13 @@ export default function HomeScreen({ navigation }: Props) {
         weatherData: response.weather_data,
         riskObject: response.risk_object,
         confidenceLabel: response.confidence_label || "High Confidence",
-        sourceAttribution: response.source_attribution || "WeatherGPT Multi-Model Consensus",
+        sourceAttribution: response.source_attribution || "WeatherGPT Multi-Model Ensemble",
         rawResponse: response,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err: any) {
-      console.warn("Query API failed:", err);
+    } catch (err) {
+      console.warn("Query failed, generating fallback:", err);
 
       let fallbackText =
         "வானிலை தகவல்: உங்கள் பகுதியில் மிதமான மேகமூட்டத்துடன் லேசான காற்று வீசும். மழை வாய்ப்பு 20%. அவசர எச்சரிக்கை எதுவும் இல்லை.";
@@ -530,7 +487,7 @@ export default function HomeScreen({ navigation }: Props) {
     }
   };
 
-  // ── Audio Speech Playback ──
+  // ── Audio Speech Playback via Direct Streaming ──
   const handleSpeak = async (msgId: string, text: string) => {
     if (playingMessageId === msgId) {
       if (currentAudioRef.current) {
@@ -602,9 +559,9 @@ export default function HomeScreen({ navigation }: Props) {
       case "moderate":
         return "#FBBF24";
       case "low":
-        return "#34D399";
+        return "#10B981";
       default:
-        return "#60A5FA";
+        return "#D97706";
     }
   };
 
@@ -613,281 +570,317 @@ export default function HomeScreen({ navigation }: Props) {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      {/* ── Top Header with Drawer Toggle & Voice Mode ── */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) + 8 }]}>
+      {/* ── Top App Bar (Claude Minimalist Header) ── */}
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 14) + 6 }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity
             style={styles.headerIconBtn}
             onPress={() => setIsDrawerOpen(true)}
             title="Chat History & Sessions"
           >
-            <Ionicons name="menu" size={20} color="#F1F5F9" />
+            <Ionicons name="menu-outline" size={22} color="#D4D4D0" />
           </TouchableOpacity>
 
-          <View style={styles.titleBox}>
-            <View style={styles.titleRow}>
-              <Text style={styles.headerTitle}>WeatherGPT</Text>
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: isOnline ? "#34D399" : "#F59E0B" },
-                ]}
-              />
+          <TouchableOpacity style={styles.modelSelectorPill} onPress={() => setIsDrawerOpen(true)}>
+            <Text style={styles.modelNameText}>WeatherGPT 2.5</Text>
+            <View style={styles.modelBadge}>
+              <Text style={styles.modelBadgeText}>
+                {persona === "farmer" ? "விவசாயி" : persona.toUpperCase()} • {language.toUpperCase()}
+              </Text>
             </View>
-            <Text style={styles.headerSubtitle}>
-              {persona.replace(/_/g, " ").toUpperCase()} • {language.toUpperCase()}
-            </Text>
-          </View>
+            <Ionicons name="chevron-down" size={14} color="#A3A39A" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.headerRight}>
-          {/* Real-time Voice-to-Voice Mode Button (ChatGPT Voice style) */}
+          {/* New Chat Icon */}
           <TouchableOpacity
-            style={[styles.headerIconBtn, styles.voiceModeBtn]}
+            style={styles.headerIconBtn}
+            onPress={handleStartNewChat}
+            title="New Chat"
+          >
+            <Ionicons name="create-outline" size={20} color="#D4D4D0" />
+          </TouchableOpacity>
+
+          {/* Real-time Voice Mode Button (Claude Voice Orb) */}
+          <TouchableOpacity
+            style={[styles.headerIconBtn, styles.voiceModeHeaderBtn]}
             onPress={() => {
               setIsVoiceModeActive(true);
               setVoiceModeStatus("listening");
               startListening();
             }}
-            title="Voice-to-Voice AI Mode"
+            title="Voice-to-Voice AI"
           >
-            <Ionicons name="radio" size={17} color="#38BDF8" />
-            <Text style={styles.voiceModeBtnText}>Voice Mode</Text>
+            <Ionicons name="radio" size={16} color="#D97706" />
           </TouchableOpacity>
 
+          {/* GIS Multi-Layer Map */}
           <TouchableOpacity
             style={styles.headerIconBtn}
             onPress={() => navigation.navigate("Map", { initialMode: "radar" })}
-            title="GIS Multi-Layer Map"
+            title="GIS Multi-Layer Radar Map"
           >
-            <Ionicons name="map-outline" size={19} color="#60A5FA" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerIconBtn}
-            onPress={() => navigation.navigate("Settings")}
-            title="Settings"
-          >
-            <Ionicons name="settings-outline" size={19} color="#94A3B8" />
+            <Ionicons name="map-outline" size={20} color="#D4D4D0" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* ── Chat Messages Feed ── */}
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.chatScroll}
-        contentContainerStyle={styles.chatScrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {messages.map((msg) => {
-          const isUser = msg.sender === "user";
-          const isPlaying = playingMessageId === msg.id;
-          const currentMetrics = msg.weatherData?.current;
-          const rainScore = msg.riskObject?.hazards?.rainfall?.final_risk_level;
+      {/* ── Main Chat Canvas ── */}
+      {messages.length === 0 ? (
+        /* Claude Style Landing Hero with 2x2 cards */
+        <ScrollView
+          style={styles.heroScroll}
+          contentContainerStyle={styles.heroContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.heroHeader}>
+            <View style={styles.claudeSparkIcon}>
+              <Ionicons name="sparkles" size={24} color="#D97706" />
+            </View>
+            <Text style={styles.heroTitle}>Good evening</Text>
+            <Text style={styles.heroSubtitle}>
+              How can WeatherGPT help you with meteorological intelligence, agricultural advisories, or disaster risk today?
+            </Text>
+          </View>
 
-          return (
-            <View
-              key={msg.id}
-              style={[
-                styles.messageRow,
-                isUser ? styles.messageRowUser : styles.messageRowAssistant,
-              ]}
-            >
-              {!isUser && (
-                <View style={styles.botAvatar}>
-                  <Ionicons name="sparkles" size={15} color="#60A5FA" />
+          <View style={styles.promptCardsGrid}>
+            {CLAUDE_PROMPTS.map((card, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.promptCard}
+                onPress={() => handleSendMessage(card.prompt)}
+              >
+                <View style={styles.cardIconBox}>
+                  <Ionicons name={card.icon as any} size={18} color="#D97706" />
                 </View>
-              )}
+                <Text style={styles.cardTitle}>{card.title}</Text>
+                <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      ) : (
+        /* Claude Continuous Message Stream */
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.chatScroll}
+          contentContainerStyle={styles.chatScrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {messages.map((msg) => {
+            const isUser = msg.sender === "user";
+            const isPlaying = playingMessageId === msg.id;
+            const currentMetrics = msg.weatherData?.current;
+            const rainScore = msg.riskObject?.hazards?.rainfall?.final_risk_level;
 
+            return (
               <View
+                key={msg.id}
                 style={[
-                  styles.bubble,
-                  isUser ? styles.bubbleUser : styles.bubbleAssistant,
+                  styles.messageRow,
+                  isUser ? styles.messageRowUser : styles.messageRowAssistant,
                 ]}
               >
-                <Text style={isUser ? styles.textUser : styles.textAssistant}>
-                  {msg.text}
-                </Text>
-
-                {/* Weather Metrics Card */}
-                {currentMetrics && (
-                  <View style={styles.metricsBox}>
-                    <View style={styles.metricItem}>
-                      <Ionicons name="thermometer-outline" size={14} color="#F59E0B" />
-                      <Text style={styles.metricLabel}>
-                        {currentMetrics.temp != null
-                          ? `${Math.round(currentMetrics.temp)}°C`
-                          : currentMetrics.temperature_c != null
-                          ? `${Math.round(currentMetrics.temperature_c)}°C`
-                          : "--"}
-                      </Text>
-                    </View>
-                    <View style={styles.metricItem}>
-                      <Ionicons name="water-outline" size={14} color="#60A5FA" />
-                      <Text style={styles.metricLabel}>
-                        {currentMetrics.humidity != null
-                          ? `${currentMetrics.humidity}%`
-                          : currentMetrics.humidity_pct != null
-                          ? `${currentMetrics.humidity_pct}%`
-                          : "--"}
-                      </Text>
-                    </View>
-                    <View style={styles.metricItem}>
-                      <Ionicons name="flag-outline" size={14} color="#34D399" />
-                      <Text style={styles.metricLabel}>
-                        {currentMetrics.wind_speed != null
-                          ? `${currentMetrics.wind_speed} m/s`
-                          : currentMetrics.wind_speed_kmh != null
-                          ? `${currentMetrics.wind_speed_kmh} km/h`
-                          : "--"}
-                      </Text>
-                    </View>
-                    {rainScore && (
-                      <View
-                        style={[
-                          styles.riskPill,
-                          {
-                            backgroundColor: getRiskColor(rainScore) + "22",
-                            borderColor: getRiskColor(rainScore),
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.riskPillText,
-                            { color: getRiskColor(rainScore) },
-                          ]}
-                        >
-                          {rainScore.toUpperCase()}
-                        </Text>
-                      </View>
-                    )}
+                {!isUser && (
+                  <View style={styles.claudeAvatar}>
+                    <Ionicons name="sparkles" size={14} color="#D97706" />
                   </View>
                 )}
 
-                {/* Bubble Footer */}
-                {!isUser && (
-                  <View style={styles.bubbleFooter}>
-                    <Text style={styles.msgTime}>{msg.timestamp}</Text>
-                    <View style={styles.actionIcons}>
+                <View
+                  style={[
+                    styles.bubble,
+                    isUser ? styles.bubbleUser : styles.bubbleAssistant,
+                  ]}
+                >
+                  <Text style={isUser ? styles.textUser : styles.textAssistant}>
+                    {msg.text}
+                  </Text>
+
+                  {/* Weather Metrics Card */}
+                  {currentMetrics && (
+                    <View style={styles.metricsBox}>
+                      <View style={styles.metricItem}>
+                        <Ionicons name="thermometer-outline" size={13} color="#F59E0B" />
+                        <Text style={styles.metricLabel}>
+                          {currentMetrics.temp != null
+                            ? `${Math.round(currentMetrics.temp)}°C`
+                            : currentMetrics.temperature_c != null
+                            ? `${Math.round(currentMetrics.temperature_c)}°C`
+                            : "--"}
+                        </Text>
+                      </View>
+                      <View style={styles.metricItem}>
+                        <Ionicons name="water-outline" size={13} color="#60A5FA" />
+                        <Text style={styles.metricLabel}>
+                          {currentMetrics.humidity != null
+                            ? `${currentMetrics.humidity}%`
+                            : currentMetrics.humidity_pct != null
+                            ? `${currentMetrics.humidity_pct}%`
+                            : "--"}
+                        </Text>
+                      </View>
+                      <View style={styles.metricItem}>
+                        <Ionicons name="flag-outline" size={13} color="#10B981" />
+                        <Text style={styles.metricLabel}>
+                          {currentMetrics.wind_speed != null
+                            ? `${currentMetrics.wind_speed} m/s`
+                            : currentMetrics.wind_speed_kmh != null
+                            ? `${currentMetrics.wind_speed_kmh} km/h`
+                            : "--"}
+                        </Text>
+                      </View>
+                      {rainScore && (
+                        <View
+                          style={[
+                            styles.riskPill,
+                            {
+                              backgroundColor: getRiskColor(rainScore) + "20",
+                              borderColor: getRiskColor(rainScore),
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.riskPillText,
+                              { color: getRiskColor(rainScore) },
+                            ]}
+                          >
+                            {rainScore.toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+
+                  {/* Claude Action Row below Assistant response */}
+                  {!isUser && (
+                    <View style={styles.actionRow}>
                       <TouchableOpacity
-                        style={styles.actionBtn}
+                        style={styles.actionIconBtn}
                         onPress={() => handleSpeak(msg.id, msg.text)}
+                        title="Read Aloud"
                       >
                         <Ionicons
-                          name={isPlaying ? "stop-circle" : "volume-high-outline"}
+                          name={isPlaying ? "stop-circle" : "volume-medium-outline"}
                           size={16}
-                          color={isPlaying ? "#EF4444" : "#94A3B8"}
+                          color={isPlaying ? "#EF4444" : "#A3A39A"}
                         />
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.actionBtn}
+                        style={styles.actionIconBtn}
                         onPress={() => handleShare(msg.text)}
+                        title="Share"
                       >
-                        <Ionicons name="share-social-outline" size={16} color="#94A3B8" />
+                        <Ionicons name="share-outline" size={15} color="#A3A39A" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.actionIconBtn}
+                        onPress={() => navigation.navigate("Map", { initialMode: "radar" })}
+                        title="Open Doppler Radar"
+                      >
+                        <Ionicons name="map-outline" size={15} color="#A3A39A" />
                       </TouchableOpacity>
                     </View>
-                  </View>
-                )}
+                  )}
+                </View>
+              </View>
+            );
+          })}
 
-                {isUser && <Text style={styles.msgTimeUser}>{msg.timestamp}</Text>}
+          {/* Thinking / Analyzing Indicator */}
+          {isLoading && (
+            <View style={[styles.messageRow, styles.messageRowAssistant]}>
+              <View style={styles.claudeAvatar}>
+                <Ionicons name="sparkles" size={14} color="#D97706" />
+              </View>
+              <View style={[styles.bubble, styles.bubbleAssistant, styles.loadingBubble]}>
+                <ActivityIndicator size="small" color="#D97706" />
+                <Text style={styles.loadingText}>Synthesizing meteorological consensus...</Text>
               </View>
             </View>
-          );
-        })}
-
-        {/* Typing Bubble */}
-        {isLoading && (
-          <View style={[styles.messageRow, styles.messageRowAssistant]}>
-            <View style={styles.botAvatar}>
-              <Ionicons name="sparkles" size={15} color="#60A5FA" />
-            </View>
-            <View style={[styles.bubble, styles.bubbleAssistant, styles.loadingBubble]}>
-              <ActivityIndicator size="small" color="#60A5FA" />
-              <Text style={styles.loadingText}>
-                Analyzing satellite radar & AI models...
-              </Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* ── Quick Question Chips ── */}
-      <View style={styles.chipsContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsScroll}
-        >
-          {QUICK_CHIPS.map((chip, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.chip}
-              onPress={() => handleSendMessage(chip.label)}
-              disabled={isLoading}
-            >
-              <Ionicons name={chip.icon as any} size={13} color="#60A5FA" />
-              <Text style={styles.chipText}>{chip.label}</Text>
-            </TouchableOpacity>
-          ))}
+          )}
         </ScrollView>
-      </View>
+      )}
 
-      {/* ── Floating Input Dock ── */}
-      <View style={[styles.inputDock, { paddingBottom: Math.max(insets.bottom, 12) + 6 }]}>
-        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-          <TouchableOpacity
+      {/* ── Claude Style Elevated Input Box ── */}
+      <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 12) + 6 }]}>
+        <View style={styles.claudeInputBox}>
+          <TextInput
             style={[
-              styles.micBtn,
-              isListening && { backgroundColor: "#EF4444", borderColor: "#F87171" },
+              styles.textInput,
+              isListening && { color: "#FBBF24" },
             ]}
-            onPress={toggleListening}
-            disabled={isLoading}
-          >
-            <Ionicons
-              name={isListening ? "mic" : "mic-outline"}
-              size={20}
-              color={isListening ? "#FFFFFF" : "#60A5FA"}
-            />
-          </TouchableOpacity>
-        </Animated.View>
-
-        <TextInput
-          style={[
-            styles.textInput,
-            isListening && { borderColor: "#EF4444", color: "#FCA5A5" },
-          ]}
-          placeholder={
-            isListening
-              ? `🎙️ Listening in ${language.toUpperCase()}... (speak now)`
-              : "Ask anything about weather, crops, or travel..."
-          }
-          placeholderTextColor={isListening ? "#FCA5A5" : "#64748B"}
-          value={inputText}
-          onChangeText={setInputText}
-          onSubmitEditing={() => handleSendMessage()}
-          returnKeyType="send"
-          editable={!isLoading}
-        />
-
-        <TouchableOpacity
-          style={[
-            styles.sendBtn,
-            { backgroundColor: inputText.trim() ? "#2563EB" : "#334155" },
-          ]}
-          onPress={() => handleSendMessage()}
-          disabled={!inputText.trim() || isLoading}
-        >
-          <Ionicons
-            name="send"
-            size={16}
-            color={inputText.trim() ? "#FFFFFF" : "#64748B"}
+            placeholder={
+              isListening
+                ? `Listening in ${language.toUpperCase()}... (Speak now)`
+                : "Reply to WeatherGPT or ask about weather, crops, travel..."
+            }
+            placeholderTextColor="#787774"
+            value={inputText}
+            onChangeText={setInputText}
+            onSubmitEditing={() => handleSendMessage()}
+            returnKeyType="send"
+            multiline={true}
+            editable={!isLoading}
           />
-        </TouchableOpacity>
+
+          {/* Bottom dock inside input box */}
+          <View style={styles.inputInnerDock}>
+            <View style={styles.inputDockLeft}>
+              {/* Voice dictation mic */}
+              <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                <TouchableOpacity
+                  style={[
+                    styles.dockIconBtn,
+                    isListening && styles.dockIconBtnListening,
+                  ]}
+                  onPress={toggleListening}
+                  disabled={isLoading}
+                >
+                  <Ionicons
+                    name={isListening ? "mic" : "mic-outline"}
+                    size={18}
+                    color={isListening ? "#FFFFFF" : "#A3A39A"}
+                  />
+                </TouchableOpacity>
+              </Animated.View>
+
+              <TouchableOpacity
+                style={styles.dockPill}
+                onPress={() => navigation.navigate("Settings")}
+              >
+                <Text style={styles.dockPillText}>
+                  {persona === "farmer" ? "🌾 Farmer" : persona} • {language.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Send Button */}
+            <TouchableOpacity
+              style={[
+                styles.sendBtn,
+                {
+                  backgroundColor: inputText.trim() ? "#D97706" : "rgba(217, 119, 6, 0.2)",
+                },
+              ]}
+              onPress={() => handleSendMessage()}
+              disabled={!inputText.trim() || isLoading}
+            >
+              <Ionicons
+                name="arrow-up"
+                size={18}
+                color={inputText.trim() ? "#FFFFFF" : "#787774"}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
-      {/* ── SIDEBAR DRAWER (ChatGPT Style Sessions & + New Chat) ── */}
+      {/* ── CLAUDE SIDEBAR DRAWER ── */}
       <Modal
         visible={isDrawerOpen}
         transparent={true}
@@ -902,31 +895,32 @@ export default function HomeScreen({ navigation }: Props) {
           />
 
           <View style={styles.drawerContainer}>
-            {/* Drawer Header */}
+            {/* Top Brand & Start New Chat */}
             <View style={styles.drawerHeader}>
               <View style={styles.drawerBrand}>
-                <Ionicons name="cloudy-night" size={22} color="#60A5FA" />
+                <View style={styles.drawerLogoIcon}>
+                  <Ionicons name="sparkles" size={16} color="#D97706" />
+                </View>
                 <Text style={styles.drawerBrandText}>WeatherGPT</Text>
               </View>
               <TouchableOpacity
                 style={styles.drawerCloseBtn}
                 onPress={() => setIsDrawerOpen(false)}
               >
-                <Ionicons name="close" size={20} color="#94A3B8" />
+                <Ionicons name="close" size={20} color="#A3A39A" />
               </TouchableOpacity>
             </View>
 
-            {/* + New Chat Button */}
             <TouchableOpacity
               style={styles.newChatBtn}
-              onPress={handleCreateNewChat}
+              onPress={handleStartNewChat}
             >
-              <Ionicons name="add" size={20} color="#0F172A" />
-              <Text style={styles.newChatBtnText}>New Chat</Text>
+              <Ionicons name="create-outline" size={17} color="#F5F5F0" />
+              <Text style={styles.newChatBtnText}>Start new chat</Text>
             </TouchableOpacity>
 
-            {/* Past Chats List */}
-            <Text style={styles.drawerSectionTitle}>Previous Chats</Text>
+            {/* History Sessions List */}
+            <Text style={styles.drawerSectionTitle}>Recent</Text>
             <ScrollView style={styles.sessionsList} showsVerticalScrollIndicator={false}>
               {sessions.map((sess) => {
                 const isActive = sess.id === currentSessionId;
@@ -936,41 +930,47 @@ export default function HomeScreen({ navigation }: Props) {
                     style={[styles.sessionItem, isActive && styles.sessionItemActive]}
                     onPress={() => handleSelectSession(sess)}
                   >
-                    <Ionicons
-                      name="chatbubble-ellipses-outline"
-                      size={16}
-                      color={isActive ? "#60A5FA" : "#64748B"}
-                    />
-                    <View style={styles.sessionInfo}>
-                      <Text
-                        style={[styles.sessionTitle, isActive && styles.sessionTitleActive]}
-                        numberOfLines={1}
-                      >
-                        {sess.title}
-                      </Text>
-                      <Text style={styles.sessionDate}>{sess.createdAt}</Text>
-                    </View>
+                    <Text
+                      style={[styles.sessionTitle, isActive && styles.sessionTitleActive]}
+                      numberOfLines={1}
+                    >
+                      {sess.title || "New Chat"}
+                    </Text>
                     <TouchableOpacity
                       style={styles.sessionDeleteBtn}
                       onPress={() => handleDeleteSession(sess.id)}
                     >
-                      <Ionicons name="trash-outline" size={14} color="#64748B" />
+                      <Ionicons name="trash-outline" size={13} color="#787774" />
                     </TouchableOpacity>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
 
-            {/* Drawer Footer info */}
+            {/* Bottom User Info */}
             <View style={styles.drawerFooter}>
-              <Text style={styles.drawerFooterText}>Team Griffins | SIH 2026</Text>
-              <Text style={styles.drawerFooterSub}>Bhashini & Gemini 2.5 Multi-Model</Text>
+              <TouchableOpacity
+                style={styles.drawerProfileRow}
+                onPress={() => {
+                  setIsDrawerOpen(false);
+                  navigation.navigate("Settings");
+                }}
+              >
+                <View style={styles.profileAvatar}>
+                  <Text style={styles.profileAvatarText}>D</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.profileName}>Deepak • Team Griffins</Text>
+                  <Text style={styles.profileSub}>Bhashini & Gemini 2.5</Text>
+                </View>
+                <Ionicons name="settings-outline" size={18} color="#A3A39A" />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* ── REAL-TIME VOICE-TO-VOICE AI MODE (ChatGPT Voice Mode) ── */}
+      {/* ── CLAUDE VOICE-TO-VOICE MODE ── */}
       <Modal
         visible={isVoiceModeActive}
         transparent={false}
@@ -981,12 +981,11 @@ export default function HomeScreen({ navigation }: Props) {
         }}
       >
         <View style={styles.voiceModeContainer}>
-          {/* Header */}
           <View style={[styles.voiceModeHeader, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
-            <View style={styles.voiceModeTitleBox}>
-              <Text style={styles.voiceModeTitle}>WeatherGPT Voice</Text>
+            <View>
+              <Text style={styles.voiceModeTitle}>Voice Mode</Text>
               <Text style={styles.voiceModeLang}>
-                {language === "ta" ? "தமிழ் (Tamil)" : language === "hi" ? "हिन्दी (Hindi)" : "English"}
+                {language === "ta" ? "தமிழ் (Tamil)" : "English"}
               </Text>
             </View>
             <TouchableOpacity
@@ -996,24 +995,22 @@ export default function HomeScreen({ navigation }: Props) {
                 stopListening();
               }}
             >
-              <Ionicons name="close" size={24} color="#F1F5F9" />
+              <Ionicons name="close" size={24} color="#F5F5F0" />
             </TouchableOpacity>
           </View>
 
-          {/* Central Glowing Orb Animation */}
           <View style={styles.orbContainer}>
             <Animated.View
               style={[
                 styles.glowingOrbOuter,
                 { transform: [{ scale: voiceOrbAnim }] },
-                voiceModeStatus === "speaking" && { backgroundColor: "rgba(56, 189, 248, 0.25)" },
-                voiceModeStatus === "thinking" && { backgroundColor: "rgba(245, 158, 11, 0.25)" },
+                voiceModeStatus === "speaking" && { backgroundColor: "rgba(217, 119, 6, 0.2)" },
               ]}
             />
             <Animated.View
               style={[
                 styles.glowingOrbInner,
-                voiceModeStatus === "speaking" && { backgroundColor: "#38BDF8" },
+                voiceModeStatus === "speaking" && { backgroundColor: "#D97706" },
                 voiceModeStatus === "thinking" && { backgroundColor: "#F59E0B" },
               ]}
             >
@@ -1025,21 +1022,19 @@ export default function HomeScreen({ navigation }: Props) {
                     ? "sparkles"
                     : "mic"
                 }
-                size={48}
-                color="#0F172A"
+                size={44}
+                color="#1F1E1D"
               />
             </Animated.View>
 
-            {/* Status text */}
             <Text style={styles.orbStatusText}>
               {voiceModeStatus === "listening"
-                ? "Listening... Speak naturally"
+                ? "Listening... Speak in Tamil or English"
                 : voiceModeStatus === "thinking"
-                ? "Analyzing satellite & AI..."
+                ? "Analyzing meteorology..."
                 : "WeatherGPT Speaking..."}
             </Text>
 
-            {/* Live Subtitle Transcript */}
             {voiceModeTranscript ? (
               <View style={styles.voiceTranscriptCard}>
                 <Text style={styles.voiceTranscriptText}>{voiceModeTranscript}</Text>
@@ -1047,7 +1042,6 @@ export default function HomeScreen({ navigation }: Props) {
             ) : null}
           </View>
 
-          {/* Voice Mode Bottom Controls */}
           <View style={[styles.voiceModeFooter, { paddingBottom: Math.max(insets.bottom, 20) + 20 }]}>
             <TouchableOpacity
               style={styles.voiceModeCircleBtn}
@@ -1055,8 +1049,8 @@ export default function HomeScreen({ navigation }: Props) {
             >
               <Ionicons
                 name={isListening ? "pause" : "mic"}
-                size={26}
-                color="#38BDF8"
+                size={24}
+                color="#D97706"
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -1066,8 +1060,8 @@ export default function HomeScreen({ navigation }: Props) {
                 stopListening();
               }}
             >
-              <Ionicons name="chatbubble-ellipses" size={24} color="#F1F5F9" />
-              <Text style={styles.exitText}>Chat</Text>
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#F5F5F0" />
+              <Text style={styles.exitText}>Text Chat</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1079,83 +1073,147 @@ export default function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0B1120",
+    backgroundColor: "#181716", // Claude iconic warm dark
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 14,
-    paddingBottom: 12,
-    backgroundColor: "#0F172A",
+    paddingBottom: 10,
+    backgroundColor: "#181716",
     borderBottomWidth: 1,
-    borderBottomColor: "#1E293B",
+    borderBottomColor: "#262522",
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
   },
-  titleBox: {
-    gap: 1,
-  },
-  titleRow: {
+  modelSelectorPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    backgroundColor: "#22211F",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#2D2C28",
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#F8FAFC",
+  modelNameText: {
+    color: "#F5F5F0",
+    fontSize: 13,
+    fontWeight: "600",
   },
-  statusDot: {
-    width: 7,
-    height: 7,
+  modelBadge: {
+    backgroundColor: "rgba(217, 119, 6, 0.15)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 4,
   },
-  headerSubtitle: {
-    fontSize: 11,
-    color: "#94A3B8",
-    fontWeight: "500",
+  modelBadgeText: {
+    color: "#D97706",
+    fontSize: 10,
+    fontWeight: "700",
   },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
   },
   headerIconBtn: {
-    padding: 8,
+    padding: 7,
     borderRadius: 8,
-    backgroundColor: "#1E293B",
+    backgroundColor: "#22211F",
   },
-  voiceModeBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "rgba(56, 189, 248, 0.12)",
-    borderColor: "rgba(56, 189, 248, 0.3)",
+  voiceModeHeaderBtn: {
+    backgroundColor: "rgba(217, 119, 6, 0.12)",
+    borderColor: "rgba(217, 119, 6, 0.3)",
     borderWidth: 1,
-    paddingHorizontal: 9,
-    paddingVertical: 6,
   },
-  voiceModeBtnText: {
-    color: "#38BDF8",
-    fontSize: 11.5,
+
+  /* ── Hero Landing Canvas (Claude Style) ── */
+  heroScroll: {
+    flex: 1,
+  },
+  heroContent: {
+    paddingHorizontal: 20,
+    paddingTop: 36,
+    paddingBottom: 20,
+    alignItems: "center",
+  },
+  heroHeader: {
+    alignItems: "center",
+    marginBottom: 32,
+    maxWidth: 480,
+  },
+  claudeSparkIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(217, 119, 6, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  heroTitle: {
+    color: "#F5F5F0",
+    fontSize: 26,
+    fontWeight: "600",
+    letterSpacing: -0.5,
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    color: "#A3A39A",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  promptCardsGrid: {
+    width: "100%",
+    maxWidth: 540,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  promptCard: {
+    flexBasis: "48%",
+    flexGrow: 1,
+    backgroundColor: "#22211F",
+    borderWidth: 1,
+    borderColor: "#2D2C28",
+    borderRadius: 12,
+    padding: 14,
+    gap: 6,
+  },
+  cardIconBox: {
+    marginBottom: 2,
+  },
+  cardTitle: {
+    color: "#F5F5F0",
+    fontSize: 13.5,
     fontWeight: "600",
   },
+  cardSubtitle: {
+    color: "#787774",
+    fontSize: 11.5,
+    lineHeight: 16,
+  },
+
+  /* ── Continuous Message Stream ── */
   chatScroll: {
     flex: 1,
   },
   chatScrollContent: {
-    paddingHorizontal: 14,
-    paddingVertical: 16,
-    gap: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    gap: 20,
   },
   messageRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 8,
+    alignItems: "flex-start",
+    gap: 10,
     maxWidth: "100%",
   },
   messageRowUser: {
@@ -1164,48 +1222,40 @@ const styles = StyleSheet.create({
   messageRowAssistant: {
     justifyContent: "flex-start",
   },
-  botAvatar: {
+  claudeAvatar: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#1E293B",
+    backgroundColor: "rgba(217, 119, 6, 0.15)",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#334155",
-    marginBottom: 4,
+    marginTop: 2,
   },
   bubble: {
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    maxWidth: "85%",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    maxWidth: "88%",
   },
   bubbleUser: {
-    backgroundColor: "#2563EB",
+    backgroundColor: "#2D2C28",
     borderBottomRightRadius: 4,
   },
   bubbleAssistant: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#22211F",
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "#2D2C28",
     borderBottomLeftRadius: 4,
   },
   textUser: {
     fontSize: 14.5,
-    color: "#FFFFFF",
-    lineHeight: 21,
+    color: "#F5F5F0",
+    lineHeight: 22,
   },
   textAssistant: {
     fontSize: 14.5,
-    color: "#E2E8F0",
-    lineHeight: 22,
-  },
-  msgTimeUser: {
-    fontSize: 10,
-    color: "rgba(255, 255, 255, 0.7)",
-    marginTop: 4,
-    alignSelf: "flex-end",
+    color: "#ECECE5",
+    lineHeight: 23,
   },
   metricsBox: {
     flexDirection: "row",
@@ -1215,20 +1265,20 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.08)",
+    borderTopColor: "rgba(255, 255, 255, 0.06)",
   },
   metricItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    backgroundColor: "#181716",
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   metricLabel: {
-    fontSize: 12,
-    color: "#CBD5E1",
+    fontSize: 11.5,
+    color: "#D4D4D0",
     fontWeight: "600",
   },
   riskPill: {
@@ -1241,164 +1291,163 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
   },
-  bubbleFooter: {
+  actionRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8,
+    gap: 12,
+    marginTop: 10,
     paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: "rgba(255, 255, 255, 0.05)",
   },
-  msgTime: {
-    fontSize: 10,
-    color: "#64748B",
-  },
-  actionIcons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  actionBtn: {
-    padding: 4,
+  actionIconBtn: {
+    padding: 3,
   },
   loadingBubble: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
     paddingVertical: 12,
   },
   loadingText: {
-    fontSize: 12.5,
-    color: "#94A3B8",
+    fontSize: 13,
+    color: "#A3A39A",
     fontStyle: "italic",
   },
-  chipsContainer: {
-    paddingVertical: 6,
-    backgroundColor: "#0B1120",
-  },
-  chipsScroll: {
-    paddingHorizontal: 12,
-    gap: 8,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "#1E293B",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#334155",
-  },
-  chipText: {
-    fontSize: 11.5,
-    color: "#94A3B8",
-    fontWeight: "500",
-  },
-  inputDock: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
+
+  /* ── Claude Elevated Input Box ── */
+  inputContainer: {
+    paddingHorizontal: 16,
     paddingTop: 8,
-    backgroundColor: "#0F172A",
-    borderTopWidth: 1,
-    borderTopColor: "#1E293B",
-    gap: 8,
+    backgroundColor: "#181716",
   },
-  micBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#1E293B",
-    alignItems: "center",
-    justifyContent: "center",
+  claudeInputBox: {
+    backgroundColor: "#22211F",
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "#33322E",
+    borderRadius: 16,
+    padding: 12,
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
   },
   textInput: {
-    flex: 1,
-    backgroundColor: "#1E293B",
-    color: "#FFFFFF",
-    fontSize: 14,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: Platform.OS === "ios" ? 10 : 8,
-    borderWidth: 1,
-    borderColor: "#334155",
+    color: "#F5F5F0",
+    fontSize: 14.5,
+    minHeight: 38,
+    maxHeight: 120,
+    padding: 0,
+  },
+  inputInnerDock: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 4,
+  },
+  inputDockLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  dockIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#2D2C28",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dockIconBtnListening: {
+    backgroundColor: "#EF4444",
+  },
+  dockPill: {
+    backgroundColor: "#2D2C28",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  dockPillText: {
+    color: "#A3A39A",
+    fontSize: 11,
+    fontWeight: "500",
   },
   sendBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  /* ── SIDEBAR DRAWER STYLES ── */
+  /* ── Claude Drawer ── */
   modalOverlay: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
   },
   modalBackdrop: {
     flex: 1,
   },
   drawerContainer: {
-    width: Math.min(320, SCREEN_WIDTH * 0.8),
-    backgroundColor: "#0F172A",
+    width: Math.min(300, SCREEN_WIDTH * 0.8),
+    backgroundColor: "#1F1E1D",
     borderRightWidth: 1,
-    borderRightColor: "#1E293B",
+    borderRightColor: "#2D2C28",
     padding: 16,
-    paddingTop: 48,
+    paddingTop: 46,
     justifyContent: "space-between",
   },
   drawerHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   drawerBrand: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
+  drawerLogoIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 6,
+    backgroundColor: "rgba(217, 119, 6, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   drawerBrandText: {
-    color: "#F8FAFC",
-    fontSize: 17,
-    fontWeight: "700",
+    color: "#F5F5F0",
+    fontSize: 16,
+    fontWeight: "600",
   },
   drawerCloseBtn: {
-    padding: 6,
+    padding: 4,
   },
   newChatBtn: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     gap: 8,
-    backgroundColor: "#38BDF8",
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 20,
-    shadowColor: "#38BDF8",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    backgroundColor: "#2A2926",
+    borderWidth: 1,
+    borderColor: "#363531",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 18,
   },
   newChatBtnText: {
-    color: "#0F172A",
-    fontSize: 14,
-    fontWeight: "700",
+    color: "#F5F5F0",
+    fontSize: 13.5,
+    fontWeight: "500",
   },
   drawerSectionTitle: {
-    color: "#64748B",
+    color: "#787774",
     fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 10,
+    fontWeight: "600",
+    marginBottom: 8,
   },
   sessionsList: {
     flex: 1,
@@ -1406,57 +1455,64 @@ const styles = StyleSheet.create({
   sessionItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
+    justifyContent: "space-between",
+    paddingVertical: 9,
     paddingHorizontal: 10,
-    borderRadius: 10,
-    marginBottom: 6,
-    gap: 10,
+    borderRadius: 8,
+    marginBottom: 4,
   },
   sessionItemActive: {
-    backgroundColor: "rgba(56, 189, 248, 0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(56, 189, 248, 0.3)",
-  },
-  sessionInfo: {
-    flex: 1,
+    backgroundColor: "#2B2A27",
   },
   sessionTitle: {
-    color: "#94A3B8",
+    color: "#A3A39A",
     fontSize: 13,
-    fontWeight: "500",
+    flex: 1,
   },
   sessionTitleActive: {
-    color: "#F8FAFC",
+    color: "#F5F5F0",
     fontWeight: "600",
-  },
-  sessionDate: {
-    color: "#64748B",
-    fontSize: 10,
-    marginTop: 2,
   },
   sessionDeleteBtn: {
-    padding: 6,
+    padding: 4,
   },
   drawerFooter: {
-    paddingTop: 16,
+    paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: "#1E293B",
+    borderTopColor: "#2D2C28",
   },
-  drawerFooterText: {
-    color: "#94A3B8",
-    fontSize: 12,
+  drawerProfileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  profileAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#D97706",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileAvatarText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  profileName: {
+    color: "#F5F5F0",
+    fontSize: 12.5,
     fontWeight: "600",
   },
-  drawerFooterSub: {
-    color: "#64748B",
+  profileSub: {
+    color: "#787774",
     fontSize: 10.5,
-    marginTop: 2,
   },
 
-  /* ── REAL-TIME VOICE MODE STYLES ── */
+  /* ── Voice Mode ── */
   voiceModeContainer: {
     flex: 1,
-    backgroundColor: "#080D1A",
+    backgroundColor: "#181716",
     justifyContent: "space-between",
     paddingHorizontal: 20,
   },
@@ -1465,101 +1521,84 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  voiceModeTitleBox: {
-    gap: 2,
-  },
   voiceModeTitle: {
-    color: "#F8FAFC",
-    fontSize: 18,
-    fontWeight: "700",
+    color: "#F5F5F0",
+    fontSize: 17,
+    fontWeight: "600",
   },
   voiceModeLang: {
-    color: "#38BDF8",
+    color: "#D97706",
     fontSize: 12,
     fontWeight: "600",
   },
   voiceModeCloseBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#1E293B",
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 6,
   },
   orbContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 20,
   },
   glowingOrbOuter: {
     position: "absolute",
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: "rgba(56, 189, 248, 0.15)",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(217, 119, 6, 0.12)",
   },
   glowingOrbInner: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#38BDF8",
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "#D97706",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#38BDF8",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 24,
-    marginBottom: 30,
+    marginBottom: 24,
   },
   orbStatusText: {
-    color: "#CBD5E1",
-    fontSize: 16,
-    fontWeight: "600",
-    marginTop: 20,
+    color: "#D4D4D0",
+    fontSize: 15,
+    fontWeight: "500",
     textAlign: "center",
   },
   voiceTranscriptCard: {
-    backgroundColor: "rgba(30, 41, 59, 0.7)",
+    backgroundColor: "#22211F",
     borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 20,
+    borderColor: "#2D2C28",
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 18,
     maxWidth: "90%",
   },
   voiceTranscriptText: {
-    color: "#E2E8F0",
-    fontSize: 14,
-    lineHeight: 20,
+    color: "#ECECE5",
+    fontSize: 13.5,
     textAlign: "center",
   },
   voiceModeFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 30,
+    gap: 24,
   },
   voiceModeCircleBtn: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#1E293B",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#22211F",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "#33322E",
   },
   voiceModeExitBtn: {
-    backgroundColor: "#2563EB",
-    borderColor: "#3B82F6",
+    backgroundColor: "#2D2C28",
     flexDirection: "row",
     gap: 6,
-    width: 100,
-    borderRadius: 30,
+    width: 110,
   },
   exitText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700",
+    color: "#F5F5F0",
+    fontSize: 12.5,
+    fontWeight: "600",
   },
 });
