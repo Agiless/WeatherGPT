@@ -238,9 +238,11 @@ export default function HomeScreen({ navigation }: Props) {
     AsyncStorage.setItem("weathergpt_black_gold_sessions_v1", JSON.stringify(filtered)).catch(() => {});
   };
 
-  // ── Inline Speech Recognition ──
+  const isListeningRef = useRef(false);
+
+  // ── Inline Speech Recognition (Continuous & Resilient) ──
   const toggleListening = () => {
-    if (isListening) {
+    if (isListeningRef.current) {
       stopListening();
     } else {
       startListening();
@@ -248,6 +250,9 @@ export default function HomeScreen({ navigation }: Props) {
   };
 
   const startListening = () => {
+    isListeningRef.current = true;
+    setIsListening(true);
+
     if (Platform.OS === "web") {
       const windowObj = typeof window !== "undefined" ? (window as any) : null;
       const SpeechRecognition =
@@ -255,31 +260,60 @@ export default function HomeScreen({ navigation }: Props) {
 
       if (SpeechRecognition) {
         try {
+          if (speechRecognitionRef.current) {
+            try { speechRecognitionRef.current.abort(); } catch {}
+          }
+
           const recognition = new SpeechRecognition();
           speechRecognitionRef.current = recognition;
-          recognition.continuous = false;
+          recognition.continuous = true;
           recognition.interimResults = true;
+          recognition.maxAlternatives = 1;
           recognition.lang =
             language === "ta" ? "ta-IN" : language === "hi" ? "hi-IN" : "en-IN";
 
-          recognition.onstart = () => setIsListening(true);
+          recognition.onstart = () => {
+            isListeningRef.current = true;
+            setIsListening(true);
+          };
+
           recognition.onresult = (event: any) => {
-            let transcript = "";
+            let fullTranscript = "";
             for (let i = 0; i < event.results.length; i++) {
-              transcript += event.results[i][0].transcript;
+              fullTranscript += event.results[i][0].transcript;
             }
-            if (transcript) {
-              setInputText(transcript);
-              if (isVoiceModeActive) setVoiceModeTranscript(transcript);
+            if (fullTranscript.trim()) {
+              setInputText(fullTranscript);
+              if (isVoiceModeActive) setVoiceModeTranscript(fullTranscript);
             }
           };
-          recognition.onerror = () => setIsListening(false);
+
+          recognition.onerror = (event: any) => {
+            console.warn("Speech recognition event:", event?.error);
+            // Ignore brief pauses / no-speech without terminating
+            if (event?.error === "no-speech") {
+              return;
+            }
+            if (event?.error === "not-allowed" || event?.error === "service-not-allowed") {
+              isListeningRef.current = false;
+              setIsListening(false);
+            }
+          };
+
           recognition.onend = () => {
+            // If user did not manually stop and is still in listening mode, keep connection alive
+            if (isListeningRef.current) {
+              try {
+                recognition.start();
+                return;
+              } catch {}
+            }
             setIsListening(false);
             if (isVoiceModeActive && inputText.trim()) {
               handleVoiceModeCycle(inputText.trim());
             }
           };
+
           recognition.start();
           return;
         } catch (e) {
@@ -288,8 +322,7 @@ export default function HomeScreen({ navigation }: Props) {
       }
     }
 
-    // Fallback simulation
-    setIsListening(true);
+    // High fidelity simulated voice dictation for preview if Web Speech API unavailable
     const demoVoiceQueries: Record<string, string> = {
       ta: "நாளைக்கு எங்க பகுதியில் மழை பெய்யுமா? பயிர் அறுவடை செய்யலாமா?",
       hi: "कल मेरे खेत में बारिश होगी क्या? क्या मुझे सिंचाई करनी चाहिए?",
@@ -297,19 +330,23 @@ export default function HomeScreen({ navigation }: Props) {
     };
     const sample = demoVoiceQueries[language] || demoVoiceQueries["ta"];
     setTimeout(() => {
-      setInputText(sample);
-      setIsListening(false);
-      if (isVoiceModeActive) handleVoiceModeCycle(sample);
-    }, 2000);
+      if (isListeningRef.current) {
+        setInputText(sample);
+        if (isVoiceModeActive) {
+          handleVoiceModeCycle(sample);
+        }
+      }
+    }, 1500);
   };
 
   const stopListening = () => {
+    isListeningRef.current = false;
+    setIsListening(false);
     if (speechRecognitionRef.current) {
       try {
         speechRecognitionRef.current.stop();
       } catch {}
     }
-    setIsListening(false);
   };
 
   // ── Voice-to-Voice AI Loop ──
