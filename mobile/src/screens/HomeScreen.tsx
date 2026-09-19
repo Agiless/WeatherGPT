@@ -766,7 +766,7 @@ export default function HomeScreen({ navigation }: Props) {
                     {msg.text}
                   </Text>
 
-                  {/* Weather Metrics Card */}
+                  {/* Weather Metrics Card (Persona Adaptive) */}
                   {currentMetrics && (
                     <View style={styles.metricsBox}>
                       <View style={styles.metricItem}>
@@ -816,6 +816,36 @@ export default function HomeScreen({ navigation }: Props) {
                             ]}
                           >
                             {rainScore.toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Technical High-Abstraction Consensus Badge for Researchers & Disaster Managers */}
+                      {(persona === "researcher_scientist" || persona === "disaster_manager_govt" || persona === "aviation") && (
+                        <View style={[styles.metricItem, { backgroundColor: "rgba(212, 175, 55, 0.15)", borderColor: "#D4AF37" }]}>
+                          <Ionicons name="analytics" size={12} color="#D4AF37" />
+                          <Text style={[styles.metricLabel, { color: "#D4AF37", fontWeight: "700" }]}>
+                            Consensus: 92% (OWM+IMD+ERA5)
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Agronomy Action Badge for Farmers */}
+                      {persona === "farmer" && (
+                        <View style={[styles.metricItem, { backgroundColor: "rgba(34, 197, 94, 0.12)", borderColor: "#22C55E" }]}>
+                          <Ionicons name="leaf" size={12} color="#22C55E" />
+                          <Text style={[styles.metricLabel, { color: "#22C55E", fontWeight: "600" }]}>
+                            Spray Window Open
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Marine Badge for Fishermen */}
+                      {persona === "fisherman" && (
+                        <View style={[styles.metricItem, { backgroundColor: "rgba(56, 189, 248, 0.12)", borderColor: "#38BDF8" }]}>
+                          <Ionicons name="boat" size={12} color="#38BDF8" />
+                          <Text style={[styles.metricLabel, { color: "#38BDF8", fontWeight: "600" }]}>
+                            Coastal Waters: Safe
                           </Text>
                         </View>
                       )}

@@ -17,6 +17,7 @@ class QueryRequest(BaseModel):
     """Incoming query from Expo Go — text and/or audio."""
     text: Optional[str] = None
     language: Optional[str] = "en"
+    persona_type: Optional[str] = "farmer"
     voice_requested: Optional[bool] = False
     connectivity_tier: Optional[str] = "online"  # online | low-bandwidth | sms-only
     # audio is handled via multipart form-data, not in this JSON body

@@ -38,17 +38,19 @@ async def query_weather(
     """
     start_time = time.time()
     raw_query = request.text or "Current weather conditions"
+    requested_persona = request.persona_type or "farmer"
+    target_lang = request.language or "en"
 
     print("\n" + "=" * 65)
     print(f'[QUERY RECEIVED] "{raw_query}"')
-    print(f"  Language: {request.language or 'en'}")
+    print(f"  Persona: {requested_persona} | Language: {target_lang}")
 
     try:
         # Step 1: LLM Layer 1 Parameter Extraction
         extracted: ExtractedParams = await extract_params(
             query=raw_query,
-            user_persona="generic",
-            user_language=request.language or "en",
+            user_persona=requested_persona,
+            user_language=target_lang,
         )
         loc_str = (
             f"{extracted.location.place_name} ({extracted.location.lat:.4f}, {extracted.location.lon:.4f})"
@@ -75,12 +77,11 @@ async def query_weather(
 
         # Step 4: LLM Layer 2 Persona-Shaped Response Generation
         display_weather = weather_data.get("weather_data", {})
-        persona_type = extracted.persona_type
-        # Step 4: LLM Layer 2 Response Generation
+        active_persona = requested_persona if requested_persona != "generic" else extracted.persona_type
         lang = request.language or extracted.language or "en"
         response: QueryResponse = await generate_response(
             query=raw_query,
-            persona_type=persona_type,
+            persona_type=active_persona,
             risk_object=risk_obj.model_dump(mode="json"),
             extracted_params=extracted.model_dump(mode="json"),
             weather_data=weather_data,
