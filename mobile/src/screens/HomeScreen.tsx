@@ -888,9 +888,18 @@ export default function HomeScreen({ navigation }: Props) {
             placeholderTextColor="#71717A"
             value={inputText}
             onChangeText={setInputText}
+            onKeyPress={(e: any) => {
+              if (e.nativeEvent.key === "Enter" && !e.nativeEvent.shiftKey) {
+                if (Platform.OS === "web") {
+                  e.preventDefault();
+                }
+                handleSendMessage();
+              }
+            }}
             onSubmitEditing={() => handleSendMessage()}
             returnKeyType="send"
-            multiline={true}
+            blurOnSubmit={false}
+            multiline={false}
             editable={!isLoading}
           />
 
@@ -1489,9 +1498,9 @@ const styles = StyleSheet.create({
   textInput: {
     color: "#FFFDF7",
     fontSize: 14.5,
-    minHeight: 38,
-    maxHeight: 120,
+    height: 38,
     padding: 0,
+    outlineStyle: "none" as any,
   },
   inputInnerDock: {
     flexDirection: "row",
