@@ -115,28 +115,37 @@ class BhashiniClient:
         """Transcribes using Gemini Audio when available, or contextual fallback query."""
         if self.settings.llm_api_key and len(audio_bytes) > 100:
             try:
-                from google import genai
-                from google.genai import types
-
-                client = genai.Client(api_key=self.settings.llm_api_key)
+                import base64
+                b64_audio = base64.b64encode(audio_bytes).decode("utf-8")
                 mime_type = "audio/wav" if audio_format == "wav" else "audio/mp4"
                 prompt = (
                     f"Listen to this weather query audio. Transcribe the spoken text accurately in its spoken language ({BHASHINI_LANGUAGES.get(source_lang, 'Indian English/Regional')}). "
                     "Return only the transcription text, with no extra explanation."
                 )
-                response = client.models.generate_content(
-                    model=self.settings.gemini_model,
-                    contents=[
-                        types.Part.from_bytes(data=audio_bytes, mime_type=mime_type),
-                        prompt,
-                    ],
-                )
-                if response.text and response.text.strip():
-                    return {
-                        "transcript": response.text.strip(),
-                        "source_language": source_lang,
-                        "engine": "gemini_asr_fallback",
-                    }
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.settings.gemini_model}:generateContent?key={self.settings.llm_api_key}"
+                payload = {
+                    "contents": [{
+                        "parts": [
+                            {"inlineData": {"mimeType": mime_type, "data": b64_audio}},
+                            {"text": prompt}
+                        ]
+                    }],
+                    "generationConfig": {"temperature": 0.1, "maxOutputTokens": 256}
+                }
+                async with httpx.AsyncClient(timeout=10.0) as http_client:
+                    resp = await http_client.post(url, json=payload)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            parts = candidates[0].get("content", {}).get("parts", [])
+                            text = "".join(p.get("text", "") for p in parts).strip()
+                            if text:
+                                return {
+                                    "transcript": text,
+                                    "source_language": source_lang,
+                                    "engine": "gemini_asr_fallback",
+                                }
             except Exception as e:
                 logger.debug(f"Gemini Audio fallback error: {e}")
 
