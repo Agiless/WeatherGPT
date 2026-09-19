@@ -4,9 +4,8 @@
  */
 
 import React, { useRef } from "react";
-import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
-import { WebView } from "react-native-webview";
-import { API_BASE } from "../api/client";
+import { View, StyleSheet, ActivityIndicator, Text, Platform } from "react-native";
+import { getApiBase } from "../api/client";
 import Constants from "expo-constants";
 
 interface WebViewMapProps {
@@ -15,12 +14,34 @@ interface WebViewMapProps {
 }
 
 export default function WebViewMap({ mode, onPointTap }: WebViewMapProps) {
-  const webViewRef = useRef<WebView>(null);
+  const apiBase = getApiBase();
   const mapboxToken = Constants.expoConfig?.extra?.mapboxToken || "";
 
-  const mapUrl = `${API_BASE}/v1/maps/map.html?mode=${mode}&apiBase=${encodeURIComponent(
-    API_BASE
+  const mapUrl = `${apiBase}/v1/maps/map.html?mode=${mode}&apiBase=${encodeURIComponent(
+    apiBase
   )}&token=${encodeURIComponent(mapboxToken)}`;
+
+  // Web Browser Platform Rendering (uses native iframe)
+  if (Platform.OS === "web") {
+    return (
+      <View style={styles.container}>
+        <iframe
+          src={mapUrl}
+          style={{
+            width: "100%",
+            height: "100%",
+            border: "none",
+            backgroundColor: "#0F172A",
+          }}
+          title="WeatherGPT GIS Radar Map"
+        />
+      </View>
+    );
+  }
+
+  // Native iOS / Android Platform Rendering
+  const { WebView } = require("react-native-webview");
+  const webViewRef = useRef<any>(null);
 
   const handleMessage = (event: any) => {
     try {
@@ -31,11 +52,9 @@ export default function WebViewMap({ mode, onPointTap }: WebViewMapProps) {
     } catch {}
   };
 
-  const WebViewComponent = WebView as any;
-
   return (
     <View style={styles.container}>
-      <WebViewComponent
+      <WebView
         ref={webViewRef}
         source={{ uri: mapUrl }}
         style={styles.webview}
@@ -53,7 +72,7 @@ export default function WebViewMap({ mode, onPointTap }: WebViewMapProps) {
           <View style={styles.errorContainer}>
             <Text style={styles.errorTitle}>Map Offline</Text>
             <Text style={styles.errorSubtitle}>
-              Connect to laptop LAN at {API_BASE} to stream map tiles
+              Connect to server at {apiBase} to stream map tiles
             </Text>
           </View>
         )}
