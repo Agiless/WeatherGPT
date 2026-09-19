@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health, personas, profile, query, maps, warnings, risk_snapshot, reports
+from app.api import health, personas, profile, query, maps, warnings, risk_snapshot, reports, research
 from app.db.engine import get_engine, dispose_engine
 
 
@@ -98,4 +98,5 @@ app.include_router(maps.router)
 app.include_router(warnings.router)
 app.include_router(risk_snapshot.router)
 app.include_router(reports.router)
+app.include_router(research.router)
 
