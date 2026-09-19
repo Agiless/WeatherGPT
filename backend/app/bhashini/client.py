@@ -229,29 +229,20 @@ class BhashiniClient:
 
         return text
 
-    async def synthesize_speech(
-        self, text: str, language: str = "hi", gender: str = "female"
-    ) -> Optional[str]:
-        """
-        Synthesizes spoken audio from text using Bhashini TTS.
-        Returns base64-encoded audio string (MP3/WAV) or None if fallback to client-side TTS.
-        """
+    async def synthesize_speech_bytes(
+        self, text: str, language: str = "ta"
+    ) -> Optional[bytes]:
+        """Synthesizes spoken audio from text and returns raw MP3 bytes."""
         if not text:
             return None
 
-        lang = language.lower() if language else "hi"
+        lang = language.lower() if language else "ta"
         if lang not in BHASHINI_LANGUAGES:
-            lang = "hi"
+            lang = "ta"
 
-        # Clip text if longer than 500 characters to respect Bhashini TTS limits
         tts_text = text[:450]
-
-        # ── Fallback Indic TTS Synthesis Engine (Tamil, Hindi, Telugu, etc.) ──
         try:
-            import base64
-            # Clean text for TTS (remove markdown asterisks, emojis, hashtags)
             clean_tts = tts_text.replace("*", "").replace("#", "").replace("`", "").strip()
-            # If long text, pick the first 200 chars for smooth speech delivery
             if len(clean_tts) > 220:
                 clean_tts = clean_tts[:200].rsplit(".", 1)[0] + "."
 
@@ -266,10 +257,20 @@ class BhashiniClient:
             async with httpx.AsyncClient(timeout=8.0) as client:
                 r = await client.get(tts_url, params=params, headers=headers)
                 if r.status_code == 200 and len(r.content) > 500:
-                    return base64.b64encode(r.content).decode("utf-8")
+                    return r.content
         except Exception as e:
-            logger.warning(f"Indic TTS synthesis fallback error: {e}")
+            logger.warning(f"TTS synthesis bytes error: {e}")
 
+        return None
+
+    async def synthesize_speech(
+        self, text: str, language: str = "ta", gender: str = "female"
+    ) -> Optional[str]:
+        """Synthesizes spoken audio from text and returns base64 string."""
+        import base64
+        audio_bytes = await self.synthesize_speech_bytes(text, language)
+        if audio_bytes:
+            return base64.b64encode(audio_bytes).decode("utf-8")
         return None
 
 

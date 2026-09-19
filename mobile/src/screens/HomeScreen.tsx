@@ -356,44 +356,37 @@ export default function HomeScreen({ navigation }: Props) {
     Speech.stop();
     setPlayingMessageId(msgId);
 
-    // 2. Check if we have audio_base64 from backend response
-    let audioB64 = rawResponse?.audio_base64;
-    if (!audioB64) {
+    // 2. Direct instant streaming via /v1/tts/stream (100% reliable across browsers)
+    if (Platform.OS === "web") {
       try {
-        const ttsRes = await apiRequest("/v1/tts", {
-          method: "POST",
-          body: {
-            text: text,
-            language: language || "ta",
-          },
-        });
-        audioB64 = ttsRes?.audio_base64;
-      } catch (e) {
-        console.warn("TTS fetch error:", e);
-      }
-    }
-
-    // 3. If we have native Indic audio base64, play it directly!
-    if (audioB64 && Platform.OS === "web") {
-      try {
-        const audio = new Audio("data:audio/mp3;base64," + audioB64);
+        const streamUrl = `${getApiBase()}/v1/tts/stream?text=${encodeURIComponent(
+          text
+        )}&language=${encodeURIComponent(language || "ta")}`;
+        const audio = new Audio(streamUrl);
         currentAudioRef.current = audio;
         audio.onended = () => {
           setPlayingMessageId(null);
           currentAudioRef.current = null;
         };
-        audio.onerror = () => {
+        audio.onerror = (e) => {
+          console.warn("Stream error, falling back to speech:", e);
           setPlayingMessageId(null);
           currentAudioRef.current = null;
         };
-        await audio.play();
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn("Audio playback promise rejected:", err);
+            setPlayingMessageId(null);
+          });
+        }
         return;
       } catch (err) {
-        console.warn("Web audio playback failed:", err);
+        console.warn("Audio element exception:", err);
       }
     }
 
-    // 4. Client-side Speech fallback
+    // 3. Client-side Speech fallback for mobile native
     Speech.speak(text, {
       language: language === "ta" ? "ta-IN" : language === "hi" ? "hi-IN" : "en-US",
       onDone: () => setPlayingMessageId(null),

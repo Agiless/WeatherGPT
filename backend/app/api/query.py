@@ -220,6 +220,21 @@ async def query_weather_voice(
         return fallback_resp
 
 
+from fastapi.responses import Response
+
+@router.get("/v1/tts/stream")
+async def stream_tts(text: str, language: str = "ta"):
+    """
+    Direct streaming audio endpoint.
+    Returns audio/mpeg stream for instant browser/mobile playback.
+    """
+    bhashini = get_bhashini_client()
+    audio_bytes = await bhashini.synthesize_speech_bytes(text=text, language=language)
+    if audio_bytes:
+        return Response(content=audio_bytes, media_type="audio/mpeg")
+    raise HTTPException(status_code=500, detail="Failed to synthesize audio")
+
+
 @router.post("/v1/tts")
 async def synthesize_speech_endpoint(req: TTSRequest):
     """
@@ -233,11 +248,10 @@ async def synthesize_speech_endpoint(req: TTSRequest):
         gender=req.gender or "female",
     )
     if not audio_b64:
-        # If cloud TTS isn't configured, return instruction for client-side TTS
         return {
             "status": "client_fallback",
             "audio_base64": None,
-            "message": "Use client-side speech synthesis (expo-speech or Web Speech API)",
+            "message": "Use client-side speech synthesis",
             "text": req.text,
             "language": req.language,
         }
